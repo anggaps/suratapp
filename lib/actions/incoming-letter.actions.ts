@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { requireAdminOrStaff, requireAdminOrPimpinan } from "@/lib/auth-utils";
 import { uploadFile, deleteFile } from "@/lib/storage";
 import { createAuditLog } from "@/lib/actions/audit.actions";
 import { serializePayload } from "@/lib/utils/audit";
@@ -32,8 +32,7 @@ const dispositionSchema = z.object({
 export async function createIncomingLetter(
   formData: FormData
 ) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = await requireAdminOrStaff();
 
   const raw = Object.fromEntries(formData.entries());
   const parsed = incomingLetterSchema.safeParse(raw);
@@ -55,7 +54,7 @@ export async function createIncomingLetter(
         content: data.content,
         classificationId: data.classificationId || null,
         statusId: data.statusId || null,
-        createdBy: session.user.id,
+        createdBy: user.id,
       },
     });
 
@@ -79,7 +78,7 @@ export async function createIncomingLetter(
         data: {
           ...uploaded,
           incomingLetterId: letter.id,
-          uploadedBy: session.user.id,
+          uploadedBy: user.id,
         },
       });
 
@@ -109,8 +108,7 @@ export async function updateIncomingLetter(
   id: string,
   formData: FormData
 ) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = await requireAdminOrStaff();
 
   const raw = Object.fromEntries(formData.entries());
   const parsed = incomingLetterSchema.safeParse(raw);
@@ -181,7 +179,7 @@ export async function updateIncomingLetter(
         data: {
           ...uploaded,
           incomingLetterId: id,
-          uploadedBy: session.user.id,
+          uploadedBy: user.id,
         },
       });
 
@@ -208,8 +206,7 @@ export async function updateIncomingLetter(
 }
 
 export async function deleteIncomingLetter(id: string) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = await requireAdminOrStaff();
 
   const letter = await prisma.incomingLetter.findUnique({
     where: { id },
@@ -250,8 +247,7 @@ export async function deleteIncomingLetter(id: string) {
 }
 
 export async function createDisposition(formData: FormData) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = await requireAdminOrPimpinan();
 
   const raw = Object.fromEntries(formData.entries());
   const parsed = dispositionSchema.safeParse(raw);
@@ -268,7 +264,7 @@ export async function createDisposition(formData: FormData) {
       dispositionDate: new Date(data.dispositionDate),
       target: data.target,
       notes: data.notes,
-      createdBy: session.user.id,
+      createdBy: user.id,
     },
   });
 
@@ -288,8 +284,7 @@ export async function createDisposition(formData: FormData) {
 }
 
 export async function deleteDisposition(id: string, letterId: string) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  await requireAdminOrPimpinan();
 
   const disposition = await prisma.incomingDisposition.findUnique({ where: { id } });
 
@@ -311,8 +306,7 @@ export async function deleteDisposition(id: string, letterId: string) {
 }
 
 export async function deleteAttachment(id: string) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  await requireAdminOrStaff();
 
   const attachment = await prisma.attachment.findUnique({ where: { id } });
   if (!attachment) throw new Error("Lampiran tidak ditemukan");

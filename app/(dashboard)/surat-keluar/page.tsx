@@ -12,9 +12,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, parseISO, startOfDay, endOfDay, isValid } from "date-fns";
 import { id } from "date-fns/locale";
+import { auth } from "@/auth";
 import { Plus, Eye } from "lucide-react";
 import { DeleteOutgoingButton } from "@/components/delete-outgoing-button";
 import { FilterPanel } from "@/components/filter-panel";
+import { Badge } from "@/components/ui/badge";
 
 interface PageProps {
   searchParams: Promise<{
@@ -27,7 +29,21 @@ interface PageProps {
   }>;
 }
 
+function getApprovalStatus(letter: {
+  approvedById: string | null;
+  approvedAt: Date | null;
+  rejectionReason: string | null;
+}) {
+  if (letter.approvedById) return { label: "Disetujui", variant: "default" as const, color: "bg-green-100 text-green-800" };
+  if (letter.rejectionReason) return { label: "Ditolak", variant: "destructive" as const, color: "bg-red-100 text-red-800" };
+  return { label: "Menunggu", variant: "secondary" as const, color: "bg-yellow-100 text-yellow-800" };
+}
+
 export default async function OutgoingLettersPage({ searchParams }: PageProps) {
+  const session = await auth();
+  const role = session?.user?.role;
+  const isPimpinan = role === "PIMPINAN";
+  const isStaff = role === "STAFF";
   const { q, page, classificationId, statusId, from, to } = await searchParams;
   const currentPage = Number(page) || 1;
   const settings = await prisma.setting.findFirst();
@@ -108,12 +124,14 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
           <h1 className="text-2xl font-bold">Surat Keluar</h1>
           <p className="text-muted-foreground">Kelola surat keluar</p>
         </div>
-        <Button asChild>
-          <Link href="/surat-keluar/tambah">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Surat
-          </Link>
-        </Button>
+        {!isPimpinan && (
+          <Button asChild>
+            <Link href="/surat-keluar/tambah">
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Surat
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -137,37 +155,45 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
                   <TableHead>Perihal</TableHead>
                   <TableHead>Tanggal</TableHead>
                   <TableHead>Klasifikasi</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {letters.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       Tidak ada data
                     </TableCell>
                   </TableRow>
                 )}
-                {letters.map((letter) => (
-                  <TableRow key={letter.id}>
-                    <TableCell>{letter.agendaNumber}</TableCell>
-                    <TableCell>{letter.letterNumber}</TableCell>
-                    <TableCell>{letter.recipient}</TableCell>
-                    <TableCell>{letter.subject}</TableCell>
-                    <TableCell>
-                      {format(new Date(letter.date), "dd MMM yyyy", { locale: id })}
-                    </TableCell>
-                    <TableCell>{letter.classification?.name ?? "-"}</TableCell>
-                    <TableCell className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/surat-keluar/${letter.id}`}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <DeleteOutgoingButton id={letter.id} />
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {letters.map((letter) => {
+                  const approval = getApprovalStatus(letter);
+                  const canEditDelete = !isPimpinan && !(isStaff && letter.approvedById);
+                  return (
+                    <TableRow key={letter.id}>
+                      <TableCell>{letter.agendaNumber}</TableCell>
+                      <TableCell>{letter.letterNumber}</TableCell>
+                      <TableCell>{letter.recipient}</TableCell>
+                      <TableCell>{letter.subject}</TableCell>
+                      <TableCell>
+                        {format(new Date(letter.date), "dd MMM yyyy", { locale: id })}
+                      </TableCell>
+                      <TableCell>{letter.classification?.name ?? "-"}</TableCell>
+                      <TableCell>
+                        <Badge className={approval.color}>{approval.label}</Badge>
+                      </TableCell>
+                      <TableCell className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link href={`/surat-keluar/${letter.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        {canEditDelete && <DeleteOutgoingButton id={letter.id} />}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

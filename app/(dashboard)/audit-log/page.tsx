@@ -33,12 +33,16 @@ const actionLabels: Record<AuditAction, string> = {
   CREATE: "Dibuat",
   UPDATE: "Diperbarui",
   DELETE: "Dihapus",
+  APPROVE: "Disetujui",
+  REJECT: "Ditolak",
 };
 
 const actionColors: Record<AuditAction, string> = {
   CREATE: "bg-green-100 text-green-800",
   UPDATE: "bg-blue-100 text-blue-800",
   DELETE: "bg-red-100 text-red-800",
+  APPROVE: "bg-emerald-100 text-emerald-800",
+  REJECT: "bg-orange-100 text-orange-800",
 };
 
 const entityLabels: Record<AuditEntityType, string> = {
@@ -62,7 +66,7 @@ function formatPayload(payload: string | null): string {
 
 export default async function AuditLogPage({ searchParams }: PageProps) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "PIMPINAN")) {
     redirect("/dashboard");
   }
 

@@ -10,7 +10,7 @@ import { UserRole } from "@prisma/client";
 const userSchema = z.object({
   name: z.string().min(1, "Nama wajib diisi"),
   email: z.string().email("Email tidak valid"),
-  role: z.enum(["ADMIN", "STAFF"]),
+  role: z.enum(["ADMIN", "PIMPINAN", "STAFF"]),
   phone: z.string().optional(),
   isActive: z.enum(["true", "false"]).optional(),
 });

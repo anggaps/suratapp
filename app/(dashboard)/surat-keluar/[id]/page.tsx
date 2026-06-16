@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { auth } from "@/auth";
 import { ArrowLeft, Edit } from "lucide-react";
 import { DeleteOutgoingButton } from "@/components/delete-outgoing-button";
 import { AttachmentList } from "@/components/attachment-list";
 import { deleteOutgoingAttachment } from "@/lib/actions/outgoing-letter.actions";
+import { OutgoingApprovalActions } from "@/components/outgoing-approval-actions";
 import { WhatsAppShareButton } from "@/components/whatsapp-share-button";
 import {
   getNotificationRecipients,
@@ -22,7 +24,23 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+function getApprovalStatus(letter: {
+  approvedById: string | null;
+  approvedAt: Date | null;
+  rejectionReason: string | null;
+}) {
+  if (letter.approvedById) return { label: "Disetujui", color: "bg-green-100 text-green-800" };
+  if (letter.rejectionReason) return { label: "Ditolak", color: "bg-red-100 text-red-800" };
+  return { label: "Menunggu Persetujuan", color: "bg-yellow-100 text-yellow-800" };
+}
+
 export default async function OutgoingLetterDetailPage({ params }: PageProps) {
+  const session = await auth();
+  const role = session?.user?.role;
+  const isPimpinan = role === "PIMPINAN";
+  const isAdmin = role === "ADMIN";
+  const isStaff = role === "STAFF";
+
   const { id: letterId } = await params;
   const letter = await prisma.outgoingLetter.findUnique({
     where: { id: letterId },
@@ -30,11 +48,16 @@ export default async function OutgoingLetterDetailPage({ params }: PageProps) {
       classification: true,
       status: true,
       creator: true,
+      approvedBy: { select: { name: true } },
       attachments: true,
     },
   });
 
   if (!letter) notFound();
+
+  const approvalStatus = getApprovalStatus(letter);
+  const canEditDelete = !isPimpinan && !(isStaff && letter.approvedById);
+  const canApproveReject = isAdmin || isPimpinan;
 
   const [recipients, notificationData, auditLogs] = await Promise.all([
     getNotificationRecipients(),
@@ -72,13 +95,15 @@ export default async function OutgoingLetterDetailPage({ params }: PageProps) {
               institutionName: notificationData.settings.institutionName,
             }}
           />
-          <Button variant="outline" asChild>
-            <Link href={`/surat-keluar/${letter.id}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
-          </Button>
-          <DeleteOutgoingButton id={letter.id} />
+          {canEditDelete && (
+            <Button variant="outline" asChild>
+              <Link href={`/surat-keluar/${letter.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
+            </Button>
+          )}
+          {canEditDelete && <DeleteOutgoingButton id={letter.id} />}
         </div>
       </div>
 
@@ -123,10 +148,28 @@ export default async function OutgoingLetterDetailPage({ params }: PageProps) {
               <p className="font-medium">-</p>
             )}
           </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Status Persetujuan</p>
+            <Badge className={approvalStatus.color}>{approvalStatus.label}</Badge>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Disetujui Oleh</p>
+            <p className="font-medium">
+              {letter.approvedBy?.name
+                ? `${letter.approvedBy.name} · ${format(new Date(letter.approvedAt!), "dd MMM yyyy HH:mm", { locale: id })}`
+                : "-"}
+            </p>
+          </div>
           <div className="md:col-span-2">
             <p className="text-sm text-muted-foreground">Isi / Keterangan</p>
             <p className="whitespace-pre-wrap font-medium">{letter.content ?? "-"}</p>
           </div>
+          {letter.rejectionReason && (
+            <div className="md:col-span-2">
+              <p className="text-sm text-muted-foreground">Alasan Penolakan</p>
+              <p className="whitespace-pre-wrap font-medium text-destructive">{letter.rejectionReason}</p>
+            </div>
+          )}
           <div className="md:col-span-2">
             <p className="text-sm text-muted-foreground">Dibuat Oleh</p>
             <p className="font-medium">{letter.creator.name} · {format(new Date(letter.createdAt), "dd MMM yyyy HH:mm", { locale: id })}</p>
@@ -136,6 +179,14 @@ export default async function OutgoingLetterDetailPage({ params }: PageProps) {
 
       {letter.attachments.length > 0 && (
         <AttachmentList attachments={letter.attachments} deleteAction={deleteOutgoingAttachment} />
+      )}
+
+      {canApproveReject && !letter.approvedById && (
+        <OutgoingApprovalActions
+          letterId={letter.id}
+          isApproved={!!letter.approvedById}
+          rejectionReason={letter.rejectionReason}
+        />
       )}
 
       <AuditLogList logs={auditLogs} />

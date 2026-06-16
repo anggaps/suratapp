@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { OutgoingLetterForm } from "@/components/outgoing-letter-form";
 
@@ -7,6 +8,9 @@ interface PageProps {
 }
 
 export default async function EditOutgoingLetterPage({ params }: PageProps) {
+  const session = await auth();
+  if (session?.user?.role === "PIMPINAN") redirect("/dashboard");
+
   const { id: letterId } = await params;
   const [letter, classifications, statuses, settings] = await Promise.all([
     prisma.outgoingLetter.findUnique({
@@ -19,6 +23,9 @@ export default async function EditOutgoingLetterPage({ params }: PageProps) {
   ]);
 
   if (!letter) notFound();
+  if (session?.user?.role === "STAFF" && letter.approvedById) {
+    redirect("/surat-keluar");
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">

@@ -12,6 +12,7 @@ datasource db {
 
 enum UserRole {
   ADMIN
+  PIMPINAN
   STAFF
 }
 
@@ -29,7 +30,8 @@ model User {
 
   incomingLetters         IncomingLetter[]
   incomingDispositions    IncomingDisposition[]
-  outgoingLetters         OutgoingLetter[]
+  createdOutgoingLetters  OutgoingLetter[] @relation("CreatedOutgoingLetters")
+  approvedOutgoingLetters OutgoingLetter[] @relation("ApprovedOutgoingLetters")
   attachments             Attachment[]
   createdClassifications  Classification[]
   createdLetterStatuses   LetterStatus[]
@@ -155,12 +157,16 @@ model OutgoingLetter {
   classificationId String?
   statusId         String?
   createdBy        String
+  approvedById     String?
+  approvedAt       DateTime?
+  rejectionReason  String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   classification Classification? @relation(fields: [classificationId], references: [id])
   status         LetterStatus?   @relation(fields: [statusId], references: [id])
-  creator        User            @relation(fields: [createdBy], references: [id])
+  creator        User            @relation("CreatedOutgoingLetters", fields: [createdBy], references: [id])
+  approvedBy     User?           @relation("ApprovedOutgoingLetters", fields: [approvedById], references: [id])
   attachments    Attachment[]
 
   @@map("outgoing_letters")

@@ -35,9 +35,10 @@ interface Disposition {
 interface DispositionListProps {
   dispositions: Disposition[];
   letterId: string;
+  canAdd?: boolean;
 }
 
-export function DispositionList({ dispositions, letterId }: DispositionListProps) {
+export function DispositionList({ dispositions, letterId, canAdd = true }: DispositionListProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -102,6 +103,7 @@ export function DispositionList({ dispositions, letterId }: DispositionListProps
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Disposisi</CardTitle>
+        {canAdd && (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
@@ -173,6 +175,7 @@ export function DispositionList({ dispositions, letterId }: DispositionListProps
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
         {dispositions.length === 0 && (

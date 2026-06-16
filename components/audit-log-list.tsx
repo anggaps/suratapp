@@ -25,12 +25,16 @@ const actionLabels: Record<string, string> = {
   CREATE: "Dibuat",
   UPDATE: "Diperbarui",
   DELETE: "Dihapus",
+  APPROVE: "Disetujui",
+  REJECT: "Ditolak",
 };
 
 const actionColors: Record<string, string> = {
   CREATE: "bg-green-100 text-green-800",
   UPDATE: "bg-blue-100 text-blue-800",
   DELETE: "bg-red-100 text-red-800",
+  APPROVE: "bg-emerald-100 text-emerald-800",
+  REJECT: "bg-orange-100 text-orange-800",
 };
 
 const entityLabels: Record<string, string> = {

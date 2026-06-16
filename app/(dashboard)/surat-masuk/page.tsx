@@ -12,9 +12,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, parseISO, startOfDay, endOfDay, isValid } from "date-fns";
 import { id } from "date-fns/locale";
+import { auth } from "@/auth";
 import { Plus, Eye } from "lucide-react";
 import { DeleteIncomingButton } from "@/components/delete-incoming-button";
 import { FilterPanel } from "@/components/filter-panel";
+import { Badge } from "@/components/ui/badge";
 
 interface PageProps {
   searchParams: Promise<{
@@ -28,6 +30,8 @@ interface PageProps {
 }
 
 export default async function IncomingLettersPage({ searchParams }: PageProps) {
+  const session = await auth();
+  const isPimpinan = session?.user?.role === "PIMPINAN";
   const { q, page, classificationId, statusId, from, to } = await searchParams;
   const currentPage = Number(page) || 1;
   const settings = await prisma.setting.findFirst();
@@ -71,7 +75,7 @@ export default async function IncomingLettersPage({ searchParams }: PageProps) {
       skip,
       take: pageSize,
       orderBy: { createdAt: "desc" },
-      include: { classification: true, status: true },
+      include: { classification: true, status: true, _count: { select: { dispositions: true } } },
     }),
     prisma.incomingLetter.count({ where }),
     prisma.classification.findMany({ orderBy: { name: "asc" } }),
@@ -108,12 +112,14 @@ export default async function IncomingLettersPage({ searchParams }: PageProps) {
           <h1 className="text-2xl font-bold">Surat Masuk</h1>
           <p className="text-muted-foreground">Kelola surat masuk dan disposisinya</p>
         </div>
-        <Button asChild>
-          <Link href="/surat-masuk/tambah">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Surat
-          </Link>
-        </Button>
+        {!isPimpinan && (
+          <Button asChild>
+            <Link href="/surat-masuk/tambah">
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Surat
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -137,13 +143,14 @@ export default async function IncomingLettersPage({ searchParams }: PageProps) {
                   <TableHead>Perihal</TableHead>
                   <TableHead>Tanggal</TableHead>
                   <TableHead>Klasifikasi</TableHead>
+                  <TableHead>Disposisi</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {letters.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       Tidak ada data
                     </TableCell>
                   </TableRow>
@@ -158,13 +165,20 @@ export default async function IncomingLettersPage({ searchParams }: PageProps) {
                       {format(new Date(letter.date), "dd MMM yyyy", { locale: id })}
                     </TableCell>
                     <TableCell>{letter.classification?.name ?? "-"}</TableCell>
+                    <TableCell>
+                      {letter._count.dispositions > 0 ? (
+                        <Badge variant="default">Sudah Disposisi</Badge>
+                      ) : (
+                        <Badge variant="secondary">Belum</Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="flex justify-end gap-2">
                       <Button variant="ghost" size="icon" asChild>
                         <Link href={`/surat-masuk/${letter.id}`}>
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
-                      <DeleteIncomingButton id={letter.id} />
+                      {!isPimpinan && <DeleteIncomingButton id={letter.id} />}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -40,6 +40,8 @@ const mainNav = [
 export function Sidebar({ role, appName }: SidebarProps) {
   const pathname = usePathname();
   const isAdmin = role === "ADMIN";
+  const isPimpinan = role === "PIMPINAN";
+  const isStaff = role === "STAFF";
 
   return (
     <aside className="hidden w-64 flex-col border-r bg-background lg:flex">
@@ -71,6 +73,7 @@ export function Sidebar({ role, appName }: SidebarProps) {
           );
         })}
 
+        {(isAdmin || isStaff) && (
         <Collapsible defaultOpen={pathname.startsWith("/referensi")}>
           <CollapsibleTrigger asChild>
             <Button
@@ -109,6 +112,7 @@ export function Sidebar({ role, appName }: SidebarProps) {
             </Link>
           </CollapsibleContent>
         </Collapsible>
+        )}
 
         {isAdmin && (
           <>
@@ -137,20 +141,22 @@ export function Sidebar({ role, appName }: SidebarProps) {
               <Settings className="h-4 w-4" />
               Pengaturan Sistem
             </Link>
-
-            <Link
-              href="/audit-log"
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                pathname === "/audit-log"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <ClipboardList className="h-4 w-4" />
-              Audit Log
-            </Link>
           </>
+        )}
+
+        {(isAdmin || isPimpinan) && (
+          <Link
+            href="/audit-log"
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              pathname === "/audit-log"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <ClipboardList className="h-4 w-4" />
+            Audit Log
+          </Link>
         )}
 
         <Link

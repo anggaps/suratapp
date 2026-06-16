@@ -35,6 +35,20 @@ async function main() {
     },
   });
 
+  // Pimpinan user
+  await prisma.user.upsert({
+    where: { email: "pimpinan@surat.app" },
+    update: {},
+    create: {
+      name: "Pimpinan",
+      email: "pimpinan@surat.app",
+      password: hashedPassword,
+      role: UserRole.PIMPINAN,
+      phone: "081111222333",
+      isActive: true,
+    },
+  });
+
   // Classifications
   const classifications = [
     { code: "II.3.AU", name: "Akademik / Undangan", description: "Surat akademik dan undangan resmi" },

@@ -21,6 +21,8 @@ async function getDashboardData() {
     outgoingToday,
     outgoingYesterday,
     dispositionToday,
+    outgoingPending,
+    outgoingApprovedToday,
     activeUsers,
     last7Incoming,
     last7Outgoing,
@@ -34,6 +36,8 @@ async function getDashboardData() {
     prisma.outgoingLetter.count({ where: { createdAt: { gte: todayStart, lte: todayEnd } } }),
     prisma.outgoingLetter.count({ where: { createdAt: { gte: yesterdayStart, lte: yesterdayEnd } } }),
     prisma.incomingDisposition.count({ where: { createdAt: { gte: todayStart, lte: todayEnd } } }),
+    prisma.outgoingLetter.count({ where: { approvedById: null } }),
+    prisma.outgoingLetter.count({ where: { approvedAt: { gte: todayStart, lte: todayEnd } } }),
     prisma.user.count({ where: { isActive: true } }),
     prisma.incomingLetter.findMany({
       where: { createdAt: { gte: last7DaysStart, lte: todayEnd } },
@@ -89,6 +93,8 @@ async function getDashboardData() {
     incomingPercent: calcPercent(incomingToday, incomingYesterday),
     outgoingPercent: calcPercent(outgoingToday, outgoingYesterday),
     transactionPercent: calcPercent(transactionToday, transactionYesterday),
+    outgoingPending,
+    outgoingApprovedToday,
     chartData,
     recentIncoming,
     recentOutgoing,
@@ -101,36 +107,61 @@ export default async function DashboardPage() {
   const session = await auth();
   const data = await getDashboardData();
 
-  const stats = [
-    {
-      title: "Surat Masuk Hari Ini",
-      value: data.incomingToday,
-      icon: MailOpen,
-      percent: data.incomingPercent,
-    },
-    {
-      title: "Surat Keluar Hari Ini",
-      value: data.outgoingToday,
-      icon: Send,
-      percent: data.outgoingPercent,
-    },
-    {
-      title: "Disposisi Hari Ini",
-      value: data.dispositionToday,
-      icon: FileText,
-    },
-    {
-      title: "Transaksi Surat Hari Ini",
-      value: data.transactionToday,
-      icon: FileText,
-      percent: data.transactionPercent,
-    },
-    {
-      title: "Pengguna Aktif",
-      value: data.activeUsers,
-      icon: Users,
-    },
-  ];
+  const isPimpinan = session?.user?.role === "PIMPINAN";
+
+  const stats = isPimpinan
+    ? [
+        {
+          title: "Menunggu Persetujuan",
+          value: data.outgoingPending,
+          icon: Send,
+        },
+        {
+          title: "Disetujui Hari Ini",
+          value: data.outgoingApprovedToday,
+          icon: FileText,
+        },
+        {
+          title: "Disposisi Hari Ini",
+          value: data.dispositionToday,
+          icon: FileText,
+        },
+        {
+          title: "Pengguna Aktif",
+          value: data.activeUsers,
+          icon: Users,
+        },
+      ]
+    : [
+        {
+          title: "Surat Masuk Hari Ini",
+          value: data.incomingToday,
+          icon: MailOpen,
+          percent: data.incomingPercent,
+        },
+        {
+          title: "Surat Keluar Hari Ini",
+          value: data.outgoingToday,
+          icon: Send,
+          percent: data.outgoingPercent,
+        },
+        {
+          title: "Disposisi Hari Ini",
+          value: data.dispositionToday,
+          icon: FileText,
+        },
+        {
+          title: "Transaksi Surat Hari Ini",
+          value: data.transactionToday,
+          icon: FileText,
+          percent: data.transactionPercent,
+        },
+        {
+          title: "Pengguna Aktif",
+          value: data.activeUsers,
+          icon: Users,
+        },
+      ];
 
   return (
     <div className="space-y-6">

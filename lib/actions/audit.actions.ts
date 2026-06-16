@@ -1,10 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { requireAuth, requireAdminOrPimpinan } from "@/lib/auth-utils";
 import { serializePayload } from "@/lib/utils/audit";
 
-export type AuditAction = "CREATE" | "UPDATE" | "DELETE";
+export type AuditAction = "CREATE" | "UPDATE" | "DELETE" | "APPROVE" | "REJECT";
 export type AuditEntityType =
   | "IncomingLetter"
   | "OutgoingLetter"
@@ -19,15 +19,14 @@ interface CreateAuditLogInput {
 }
 
 export async function createAuditLog(input: CreateAuditLogInput) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = await requireAuth();
 
   return prisma.auditLog.create({
     data: {
       entityType: input.entityType,
       entityId: input.entityId,
       action: input.action,
-      performedBy: session.user.id,
+      performedBy: user.id,
       payload: input.payload ? JSON.stringify(serializePayload(input.payload)) : null,
     },
   });
@@ -38,8 +37,7 @@ export async function getAuditLogsForEntity(
   entityId: string,
   limit = 50
 ) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  await requireAuth();
 
   return prisma.auditLog.findMany({
     where: { entityType, entityId },
@@ -50,8 +48,7 @@ export async function getAuditLogsForEntity(
 }
 
 export async function getRecentAuditLogs(limit = 20) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  await requireAuth();
 
   return prisma.auditLog.findMany({
     orderBy: { createdAt: "desc" },
@@ -66,8 +63,7 @@ export async function getAllAuditLogs(options?: {
   page?: number;
   pageSize?: number;
 }) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") throw new Error("Unauthorized");
+  await requireAdminOrPimpinan();
 
   const { entityType, action, page = 1, pageSize = 20 } = options ?? {};
   const skip = (page - 1) * pageSize;

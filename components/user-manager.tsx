@@ -199,6 +199,7 @@ export default function UserManager({ users, currentUserId }: { users: User[]; c
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="PIMPINAN">Pimpinan</SelectItem>
                       <SelectItem value="STAFF">Staff</SelectItem>
                     </SelectContent>
                   </Select>
@@ -277,8 +278,11 @@ export default function UserManager({ users, currentUserId }: { users: User[]; c
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={user.role === "ADMIN" ? "default" : "secondary"}>
-                        {user.role}
+                      <Badge
+                        variant={user.role === "ADMIN" ? "default" : user.role === "PIMPINAN" ? "default" : "secondary"}
+                        className={user.role === "PIMPINAN" ? "bg-purple-600 hover:bg-purple-700" : ""}
+                      >
+                        {user.role === "ADMIN" ? "Admin" : user.role === "PIMPINAN" ? "Pimpinan" : "Staff"}
                       </Badge>
                     </TableCell>
                     <TableCell>{user.phone ?? "-"}</TableCell>

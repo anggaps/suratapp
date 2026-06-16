@@ -1,8 +1,12 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { IncomingLetterForm } from "@/components/incoming-letter-form";
 import { generateLetterNumber } from "@/lib/utils/letter-number";
 
 export default async function AddIncomingLetterPage() {
+  const session = await auth();
+  if (session?.user?.role === "PIMPINAN") redirect("/dashboard");
   const [classifications, statuses, settings] = await Promise.all([
     prisma.classification.findMany({ orderBy: { code: "asc" } }),
     prisma.letterStatus.findMany({ orderBy: { name: "asc" } }),

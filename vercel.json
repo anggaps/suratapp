@@ -1,6 +1,15 @@
 {
+  "name": "suratapp",
   "buildCommand": "npm install && npx prisma migrate deploy && npm run build",
   "framework": "nextjs",
   "installCommand": "npm install",
-  "regions": ["sin1"]
+  "regions": [
+    "sin1"
+  ],
+  "experimentalServices": {
+    "web": {
+      "routePrefix": "/",
+      "framework": "nextjs"
+    }
+  }
 }

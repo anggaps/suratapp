@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { IncomingLetterForm } from "@/components/incoming-letter-form";
 
@@ -7,6 +8,9 @@ interface PageProps {
 }
 
 export default async function EditIncomingLetterPage({ params }: PageProps) {
+  const session = await auth();
+  if (session?.user?.role === "PIMPINAN") redirect("/dashboard");
+
   const { id: letterId } = await params;
   const [letter, classifications, statuses, settings] = await Promise.all([
     prisma.incomingLetter.findUnique({

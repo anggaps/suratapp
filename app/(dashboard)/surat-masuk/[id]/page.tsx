@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { auth } from "@/auth";
 import { ArrowLeft, Edit } from "lucide-react";
 import { DeleteIncomingButton } from "@/components/delete-incoming-button";
 import { DispositionList } from "@/components/disposition-list";
@@ -23,6 +24,10 @@ interface PageProps {
 }
 
 export default async function IncomingLetterDetailPage({ params }: PageProps) {
+  const session = await auth();
+  const isPimpinan = session?.user?.role === "PIMPINAN";
+  const canManageDisposisi = session?.user?.role === "ADMIN" || session?.user?.role === "PIMPINAN";
+
   const { id: letterId } = await params;
   const letter = await prisma.incomingLetter.findUnique({
     where: { id: letterId },
@@ -76,13 +81,15 @@ export default async function IncomingLetterDetailPage({ params }: PageProps) {
               institutionName: notificationData.settings.institutionName,
             }}
           />
-          <Button variant="outline" asChild>
-            <Link href={`/surat-masuk/${letter.id}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
-          </Button>
-          <DeleteIncomingButton id={letter.id} />
+          {!isPimpinan && (
+            <Button variant="outline" asChild>
+              <Link href={`/surat-masuk/${letter.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
+            </Button>
+          )}
+          {!isPimpinan && <DeleteIncomingButton id={letter.id} />}
         </div>
       </div>
 
@@ -148,7 +155,7 @@ export default async function IncomingLetterDetailPage({ params }: PageProps) {
         <AttachmentList attachments={letter.attachments} />
       )}
 
-      <DispositionList dispositions={letter.dispositions} letterId={letter.id} />
+      <DispositionList dispositions={letter.dispositions} letterId={letter.id} canAdd={canManageDisposisi} />
 
       <AuditLogList logs={auditLogs} />
     </div>

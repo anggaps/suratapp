@@ -74,6 +74,7 @@ export function OutgoingLetterForm({
 }: OutgoingLetterFormProps) {
   const isEdit = !!letter;
   const [loading, setLoading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState("");
 
   const {
@@ -103,14 +104,19 @@ export function OutgoingLetterForm({
   const currentYear = watch("date") ? new Date(watch("date")).getFullYear() : new Date().getFullYear();
 
   const regenerateLetterNumber = async () => {
-    const generated = await generateLetterNumber({
-      type: "outgoing",
-      classificationId: watch("classificationId"),
-      statusId: watch("statusId"),
-      year: currentYear,
-    });
-    if (generated) {
-      setValue("letterNumber", generated);
+    setRegenerating(true);
+    try {
+      const generated = await generateLetterNumber({
+        type: "outgoing",
+        classificationId: watch("classificationId"),
+        statusId: watch("statusId"),
+        year: currentYear,
+      });
+      if (generated) {
+        setValue("letterNumber", generated);
+      }
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -185,9 +191,14 @@ export function OutgoingLetterForm({
                   variant="outline"
                   size="icon"
                   onClick={regenerateLetterNumber}
+                  disabled={regenerating}
                   title="Generate ulang nomor surat"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  {regenerating ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
                 </Button>
               )}
             </div>

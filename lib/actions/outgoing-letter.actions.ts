@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { requireAdminOrStaff, requireAdminOrPimpinan } from "@/lib/auth-utils";
+import { UserRole } from "@prisma/client";
 import { uploadFile, deleteFile } from "@/lib/storage";
 import { createAuditLog } from "@/lib/actions/audit.actions";
 import { serializePayload } from "@/lib/utils/audit";
@@ -20,9 +21,12 @@ const outgoingLetterSchema = z.object({
   statusId: z.string().optional(),
 });
 
+const rejectionSchema = z.object({
+  reason: z.string().min(1, "Alasan penolakan wajib diisi"),
+});
+
 export async function createOutgoingLetter(formData: FormData) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = await requireAdminOrStaff();
 
   const raw = Object.fromEntries(formData.entries());
   const parsed = outgoingLetterSchema.safeParse(raw);
@@ -43,7 +47,7 @@ export async function createOutgoingLetter(formData: FormData) {
         content: data.content,
         classificationId: data.classificationId || null,
         statusId: data.statusId || null,
-        createdBy: session.user.id,
+        createdBy: user.id,
       },
     });
 
@@ -67,7 +71,7 @@ export async function createOutgoingLetter(formData: FormData) {
         data: {
           ...uploaded,
           outgoingLetterId: letter.id,
-          uploadedBy: session.user.id,
+          uploadedBy: user.id,
         },
       });
 
@@ -94,8 +98,7 @@ export async function createOutgoingLetter(formData: FormData) {
 }
 
 export async function updateOutgoingLetter(id: string, formData: FormData) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = await requireAdminOrStaff();
 
   const raw = Object.fromEntries(formData.entries());
   const parsed = outgoingLetterSchema.safeParse(raw);
@@ -110,6 +113,11 @@ export async function updateOutgoingLetter(id: string, formData: FormData) {
       where: { id },
       include: { classification: true, status: true },
     });
+
+    if (!existing) throw new Error("Surat tidak ditemukan");
+    if (existing.approvedById && user.role === UserRole.STAFF) {
+      throw new Error("Surat sudah disetujui, tidak dapat diubah");
+    }
 
     const updated = await prisma.outgoingLetter.update({
       where: { id },
@@ -165,7 +173,7 @@ export async function updateOutgoingLetter(id: string, formData: FormData) {
         data: {
           ...uploaded,
           outgoingLetterId: id,
-          uploadedBy: session.user.id,
+          uploadedBy: user.id,
         },
       });
 
@@ -192,8 +200,7 @@ export async function updateOutgoingLetter(id: string, formData: FormData) {
 }
 
 export async function deleteOutgoingLetter(id: string) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = await requireAdminOrStaff();
 
   const letter = await prisma.outgoingLetter.findUnique({
     where: { id },
@@ -201,6 +208,9 @@ export async function deleteOutgoingLetter(id: string) {
   });
 
   if (!letter) throw new Error("Surat tidak ditemukan");
+  if (letter.approvedById && user.role === UserRole.STAFF) {
+    throw new Error("Surat sudah disetujui, tidak dapat dihapus");
+  }
 
   for (const attachment of letter.attachments) {
     await deleteFile(attachment.filename, attachment.url);
@@ -234,8 +244,7 @@ export async function deleteOutgoingLetter(id: string) {
 }
 
 export async function deleteOutgoingAttachment(id: string) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  await requireAdminOrStaff();
 
   const attachment = await prisma.attachment.findUnique({ where: { id } });
   if (!attachment) throw new Error("Lampiran tidak ditemukan");
@@ -255,5 +264,80 @@ export async function deleteOutgoingAttachment(id: string) {
   });
 
   revalidatePath("/surat-keluar");
+  return { success: true };
+}
+
+export async function approveOutgoingLetter(id: string) {
+  const user = await requireAdminOrPimpinan();
+
+  const letter = await prisma.outgoingLetter.findUnique({ where: { id } });
+  if (!letter) throw new Error("Surat tidak ditemukan");
+  if (letter.approvedById) throw new Error("Surat sudah disetujui sebelumnya");
+
+  await prisma.outgoingLetter.update({
+    where: { id },
+    data: {
+      approvedById: user.id,
+      approvedAt: new Date(),
+      rejectionReason: null,
+    },
+  });
+
+  await createAuditLog({
+    entityType: "OutgoingLetter",
+    entityId: id,
+    action: "APPROVE",
+    payload: serializePayload({
+      agendaNumber: letter.agendaNumber,
+      letterNumber: letter.letterNumber,
+      recipient: letter.recipient,
+      subject: letter.subject,
+      approvedBy: user.name,
+    }),
+  });
+
+  revalidatePath("/surat-keluar");
+  revalidatePath(`/surat-keluar/${id}`);
+  return { success: true };
+}
+
+export async function rejectOutgoingLetter(id: string, formData: FormData) {
+  const user = await requireAdminOrPimpinan();
+
+  const letter = await prisma.outgoingLetter.findUnique({ where: { id } });
+  if (!letter) throw new Error("Surat tidak ditemukan");
+  if (letter.approvedById) throw new Error("Surat sudah disetujui, tidak dapat ditolak");
+
+  const raw = Object.fromEntries(formData.entries());
+  const parsed = rejectionSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+
+  await prisma.outgoingLetter.update({
+    where: { id },
+    data: {
+      approvedById: null,
+      approvedAt: null,
+      rejectionReason: parsed.data.reason,
+    },
+  });
+
+  await createAuditLog({
+    entityType: "OutgoingLetter",
+    entityId: id,
+    action: "REJECT",
+    payload: serializePayload({
+      agendaNumber: letter.agendaNumber,
+      letterNumber: letter.letterNumber,
+      recipient: letter.recipient,
+      subject: letter.subject,
+      rejectedBy: user.name,
+      reason: parsed.data.reason,
+    }),
+  });
+
+  revalidatePath("/surat-keluar");
+  revalidatePath(`/surat-keluar/${id}`);
   return { success: true };
 }

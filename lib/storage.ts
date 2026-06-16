@@ -1,5 +1,4 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
@@ -24,7 +23,7 @@ const s3Client = USE_S3
     })
   : null;
 
-const LOCAL_UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
+const DATA_URL_MAX_SIZE = 2 * 1024 * 1024; // 2 MB
 
 export interface UploadedFile {
   filename: string;
@@ -32,6 +31,10 @@ export interface UploadedFile {
   mimeType: string;
   size: number;
   url: string;
+}
+
+function isDataUrl(url: string) {
+  return url.startsWith("data:");
 }
 
 export async function uploadFile(file: File): Promise<UploadedFile> {
@@ -65,21 +68,32 @@ export async function uploadFile(file: File): Promise<UploadedFile> {
     };
   }
 
-  // Fallback: local file system
-  await fs.mkdir(LOCAL_UPLOAD_DIR, { recursive: true });
-  const filePath = path.join(LOCAL_UPLOAD_DIR, filename);
-  await fs.writeFile(filePath, buffer);
+  // Fallback: persist file content as a data URL inside the database so it survives serverless restarts.
+  if (file.size > DATA_URL_MAX_SIZE) {
+    throw new Error(
+      `File terlalu besar untuk disimpan tanpa S3 (maksimal ${DATA_URL_MAX_SIZE / 1024 / 1024} MB). ` +
+        "Silakan konfigurasi S3/R2 untuk file besar."
+    );
+  }
+
+  const base64 = buffer.toString("base64");
+  const dataUrl = `data:${mimeType};base64,${base64}`;
 
   return {
     filename,
     originalName,
     mimeType,
     size: file.size,
-    url: `/uploads/${filename}`,
+    url: dataUrl,
   };
 }
 
 export async function deleteFile(filename: string, url: string): Promise<void> {
+  if (isDataUrl(url)) {
+    // Nothing to delete on disk; the data URL lives in the database row.
+    return;
+  }
+
   if (s3Client && S3_BUCKET) {
     try {
       await s3Client.send(
@@ -92,13 +106,5 @@ export async function deleteFile(filename: string, url: string): Promise<void> {
       console.warn("Failed to delete file from S3:", error);
     }
     return;
-  }
-
-  // Fallback: local file system
-  try {
-    const localPath = path.join(LOCAL_UPLOAD_DIR, filename);
-    await fs.unlink(localPath);
-  } catch {
-    // ignore if file not found
   }
 }
