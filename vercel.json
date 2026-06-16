@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
   "buildCommand": "npx prisma migrate deploy && npm run build",
-  "installCommand": "npm ci",
+  "installCommand": "npm install",
   "devCommand": "next dev"
 }
