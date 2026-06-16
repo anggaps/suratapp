@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: suratapp
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma migrate deploy && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+    envVars:
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: NODE_ENV
+        value: production
+      - key: NEXTAUTH_URL
+        sync: false
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+    disk:
+      name: sqlite-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1

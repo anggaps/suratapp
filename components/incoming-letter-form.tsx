@@ -1,0 +1,340 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { format } from "date-fns";
+import { Loader2, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { createIncomingLetter, updateIncomingLetter } from "@/lib/actions/incoming-letter.actions";
+import { generateLetterNumber } from "@/lib/utils/letter-number";
+import { AttachmentList } from "@/components/attachment-list";
+
+const formSchema = z.object({
+  agendaNumber: z.string().min(1, "Nomor agenda wajib diisi"),
+  letterNumber: z.string().min(1, "Nomor surat wajib diisi"),
+  sender: z.string().min(1, "Pengirim wajib diisi"),
+  date: z.string().min(1, "Tanggal surat wajib diisi"),
+  receivedDate: z.string().min(1, "Tanggal diterima wajib diisi"),
+  subject: z.string().min(1, "Perihal wajib diisi"),
+  content: z.string().optional(),
+  classificationId: z.string().optional(),
+  statusId: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+interface IncomingLetterFormProps {
+  letter?: {
+    id: string;
+    agendaNumber: string;
+    letterNumber: string;
+    sender: string;
+    date: Date;
+    receivedDate: Date;
+    subject: string;
+    content: string | null;
+    classificationId: string | null;
+    statusId: string | null;
+    attachments: {
+      id: string;
+      filename: string;
+      originalName: string;
+      mimeType: string;
+      size: number;
+      url: string;
+    }[];
+  };
+  classifications: { id: string; code: string; name: string }[];
+  statuses: { id: string; name: string }[];
+  defaultLetterNumber?: string;
+  letterNumberFormat?: string;
+}
+
+export function IncomingLetterForm({
+  letter,
+  classifications,
+  statuses,
+  defaultLetterNumber = "",
+  letterNumberFormat,
+}: IncomingLetterFormProps) {
+  const router = useRouter();
+  const isEdit = !!letter;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: letter
+      ? {
+          agendaNumber: letter.agendaNumber,
+          letterNumber: letter.letterNumber,
+          sender: letter.sender,
+          date: format(new Date(letter.date), "yyyy-MM-dd"),
+          receivedDate: format(new Date(letter.receivedDate), "yyyy-MM-dd"),
+          subject: letter.subject,
+          content: letter.content ?? "",
+          classificationId: letter.classificationId ?? undefined,
+          statusId: letter.statusId ?? undefined,
+        }
+      : {
+          letterNumber: defaultLetterNumber,
+        },
+  });
+
+  const currentYear = watch("date") ? new Date(watch("date")).getFullYear() : new Date().getFullYear();
+
+  const regenerateLetterNumber = async () => {
+    const generated = await generateLetterNumber({
+      type: "incoming",
+      classificationId: watch("classificationId"),
+      statusId: watch("statusId"),
+      year: currentYear,
+    });
+    if (generated) {
+      setValue("letterNumber", generated);
+    }
+  };
+
+  const onSubmit = async (values: FormValues) => {
+    setLoading(true);
+    setError("");
+
+    const formData = new FormData();
+    Object.entries(values).forEach(([key, value]) => {
+      if (value) formData.append(key, value);
+    });
+
+    const fileInput = document.getElementById("attachments") as HTMLInputElement;
+    if (fileInput?.files) {
+      Array.from(fileInput.files).forEach((file) => {
+        formData.append("attachments", file);
+      });
+    }
+
+    try {
+      const result = isEdit
+        ? await updateIncomingLetter(letter!.id, formData)
+        : await createIncomingLetter(formData);
+
+      if (result && "error" in result) {
+        const err = result.error as Record<string, string[]>;
+        setError(Object.values(err).flat().join(", "));
+        return;
+      }
+
+      toast.success(isEdit ? "Surat masuk berhasil diperbarui" : "Surat masuk berhasil ditambahkan");
+    } catch (error) {
+      if ((error as Error).message?.includes("NEXT_REDIRECT")) {
+        // Redirect handled by server action, ignore
+        return;
+      }
+      console.error(error);
+      setError((error as Error).message || "Terjadi kesalahan");
+      toast.error("Gagal menyimpan surat masuk");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{isEdit ? "Edit Surat Masuk" : "Tambah Surat Masuk"}</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="agendaNumber">Nomor Agenda</Label>
+            <Input id="agendaNumber" {...register("agendaNumber")} />
+            {errors.agendaNumber && (
+              <p className="text-xs text-destructive">{errors.agendaNumber.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="letterNumber">Nomor Surat</Label>
+            <div className="flex items-center gap-2">
+              <Input id="letterNumber" {...register("letterNumber")} className="flex-1" />
+              {!isEdit && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={regenerateLetterNumber}
+                  title="Generate ulang nomor surat"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            {errors.letterNumber && (
+              <p className="text-xs text-destructive">{errors.letterNumber.message}</p>
+            )}
+            {letterNumberFormat && (
+              <p className="text-xs text-muted-foreground">
+                Format: {letterNumberFormat}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sender">Pengirim</Label>
+            <Input id="sender" {...register("sender")} />
+            {errors.sender && (
+              <p className="text-xs text-destructive">{errors.sender.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="subject">Perihal</Label>
+            <Input id="subject" {...register("subject")} />
+            {errors.subject && (
+              <p className="text-xs text-destructive">{errors.subject.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="date">Tanggal Surat</Label>
+            <Input id="date" type="date" {...register("date")} />
+            {errors.date && (
+              <p className="text-xs text-destructive">{errors.date.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="receivedDate">Tanggal Diterima</Label>
+            <Input id="receivedDate" type="date" {...register("receivedDate")} />
+            {errors.receivedDate && (
+              <p className="text-xs text-destructive">{errors.receivedDate.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Klasifikasi</Label>
+            <div className="flex items-center gap-2">
+              <Select
+                value={watch("classificationId") ?? "__unset__"}
+                onValueChange={(value) =>
+                  setValue("classificationId", value === "__unset__" ? undefined : value)
+                }
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Pilih klasifikasi" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classifications.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.code} - {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setValue("classificationId", undefined)}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Sifat Surat</Label>
+            <div className="flex items-center gap-2">
+              <Select
+                value={watch("statusId") ?? "__unset__"}
+                onValueChange={(value) =>
+                  setValue("statusId", value === "__unset__" ? undefined : value)
+                }
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Pilih sifat surat" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statuses.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setValue("statusId", undefined)}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="content">Isi Surat / Keterangan</Label>
+            <Textarea id="content" rows={4} {...register("content")} />
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="attachments">Lampiran</Label>
+            <Input id="attachments" type="file" multiple accept="*/*" />
+            <p className="text-xs text-muted-foreground">
+              Bisa pilih banyak file. File akan tersimpan di cloud storage bila sudah dikonfigurasi.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {letter && letter.attachments.length > 0 && (
+        <AttachmentList attachments={letter.attachments} />
+      )}
+
+      <div className="flex items-center gap-2">
+        <Button type="submit" disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Menyimpan...
+            </>
+          ) : (
+            "Simpan"
+          )}
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href="/surat-masuk">Batal</Link>
+        </Button>
+      </div>
+    </form>
+  );
+}

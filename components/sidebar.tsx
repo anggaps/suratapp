@@ -1,0 +1,171 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  MailOpen,
+  Send,
+  CalendarDays,
+  Image,
+  FolderTree,
+  Users,
+  Settings,
+  UserCircle,
+  ChevronDown,
+  ClipboardList,
+} from "lucide-react";
+
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+
+interface SidebarProps {
+  role: string;
+  appName: string;
+}
+
+const mainNav = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/surat-masuk", label: "Surat Masuk", icon: MailOpen },
+  { href: "/surat-keluar", label: "Surat Keluar", icon: Send },
+  { href: "/agenda", label: "Agenda", icon: CalendarDays },
+  { href: "/galeri", label: "Galeri", icon: Image },
+];
+
+export function Sidebar({ role, appName }: SidebarProps) {
+  const pathname = usePathname();
+  const isAdmin = role === "ADMIN";
+
+  return (
+    <aside className="hidden w-64 flex-col border-r bg-background lg:flex">
+      <div className="flex h-16 items-center border-b px-6">
+        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+          <MailOpen className="h-6 w-6 text-primary" />
+          <span>{appName}</span>
+        </Link>
+      </div>
+
+      <nav className="flex-1 space-y-1 p-4">
+        {mainNav.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {item.label}
+            </Link>
+          );
+        })}
+
+        <Collapsible defaultOpen={pathname.startsWith("/referensi")}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <span className="flex items-center gap-3">
+                <FolderTree className="h-4 w-4" />
+                Referensi
+              </span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-1 pl-4">
+            <Link
+              href="/referensi/klasifikasi"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                pathname === "/referensi/klasifikasi"
+                  ? "bg-muted text-foreground font-medium"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              Klasifikasi Surat
+            </Link>
+            <Link
+              href="/referensi/status-surat"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                pathname === "/referensi/status-surat"
+                  ? "bg-muted text-foreground font-medium"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              Status Sifat Surat
+            </Link>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {isAdmin && (
+          <>
+            <Link
+              href="/pengguna"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                pathname === "/pengguna" || pathname.startsWith("/pengguna/")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Users className="h-4 w-4" />
+              Pengguna
+            </Link>
+
+            <Link
+              href="/pengaturan"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                pathname === "/pengaturan"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Settings className="h-4 w-4" />
+              Pengaturan Sistem
+            </Link>
+
+            <Link
+              href="/audit-log"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                pathname === "/audit-log"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <ClipboardList className="h-4 w-4" />
+              Audit Log
+            </Link>
+          </>
+        )}
+
+        <Link
+          href="/profil"
+          className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+            pathname === "/profil"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          <UserCircle className="h-4 w-4" />
+          Profil
+        </Link>
+      </nav>
+    </aside>
+  );
+}

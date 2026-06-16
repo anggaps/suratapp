@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(STAFF)
+  phone     String?
+  avatar    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  incomingLetters         IncomingLetter[]
+  incomingDispositions    IncomingDisposition[]
+  outgoingLetters         OutgoingLetter[]
+  attachments             Attachment[]
+  createdClassifications  Classification[]
+  createdLetterStatuses   LetterStatus[]
+  auditLogs               AuditLog[]
+
+  @@map("users")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  entityType  String
+  entityId    String
+  action      String
+  performedBy String
+  payload     String?
+  createdAt   DateTime @default(now())
+
+  performer   User     @relation(fields: [performedBy], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Setting {
+  id               String @id @default(uuid())
+  appName          String @default("SuratAPP")
+  institutionName  String @default("Nama Institusi")
+  address          String?
+  contact          String?
+  defaultPassword  String @default("password123")
+  itemsPerPage     Int    @default(10)
+  logo             String?
+  incomingLetterFormat String @default("{sequence}/{classificationCode}/{statusCode}/{year}")
+  outgoingLetterFormat String @default("{sequence}/{classificationCode}/{statusCode}/{year}")
+  whatsappTemplate String @default("Assalamu'alaikum Wr. Wb.\n\nYth. {recipientName},\nKami informasikan mengenai surat dengan nomor {letterNumber} perihal \"{subject}\".\n\nTanggal Surat: {date}\nPengirim: {sender}\nPenerima: {recipient}\n\nTerima kasih.\nWassalamu'alaikum Wr. Wb.")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model Classification {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  name        String
+  description String?
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator         User?             @relation(fields: [createdBy], references: [id])
+  incomingLetters IncomingLetter[]
+  outgoingLetters OutgoingLetter[]
+
+  @@map("classifications")
+}
+
+model LetterStatus {
+  id    String @id @default(uuid())
+  name  String @unique
+  color String @default("#3b82f6")
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creator         User?             @relation(fields: [createdBy], references: [id])
+  incomingLetters IncomingLetter[]
+  outgoingLetters OutgoingLetter[]
+
+  @@map("letter_statuses")
+}
+
+model IncomingLetter {
+  id            String   @id @default(uuid())
+  agendaNumber  String   @unique
+  letterNumber  String
+  sender        String
+  date          DateTime
+  receivedDate  DateTime @default(now())
+  subject       String
+  content       String?
+  classificationId String?
+  statusId         String?
+  createdBy     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  classification   Classification?       @relation(fields: [classificationId], references: [id])
+  status           LetterStatus?         @relation(fields: [statusId], references: [id])
+  creator          User                  @relation(fields: [createdBy], references: [id])
+  dispositions     IncomingDisposition[]
+  attachments    Attachment[]
+
+  @@map("incoming_letters")
+}
+
+model IncomingDisposition {
+  id               String   @id @default(uuid())
+  incomingLetterId String
+  instruction      String
+  dispositionDate  DateTime @default(now())
+  target           String
+  notes            String?
+  createdBy        String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  incomingLetter IncomingLetter @relation(fields: [incomingLetterId], references: [id], onDelete: Cascade)
+  creator        User           @relation(fields: [createdBy], references: [id])
+
+  @@map("incoming_dispositions")
+}
+
+model OutgoingLetter {
+  id               String   @id @default(uuid())
+  agendaNumber     String   @unique
+  letterNumber     String
+  recipient        String
+  date             DateTime
+  subject          String
+  content          String?
+  classificationId String?
+  statusId         String?
+  createdBy        String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  classification Classification? @relation(fields: [classificationId], references: [id])
+  status         LetterStatus?   @relation(fields: [statusId], references: [id])
+  creator        User            @relation(fields: [createdBy], references: [id])
+  attachments    Attachment[]
+
+  @@map("outgoing_letters")
+}
+
+model Attachment {
+  id           String   @id @default(uuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  incomingLetterId String?
+  outgoingLetterId String?
+  uploadedBy   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  incomingLetter IncomingLetter? @relation(fields: [incomingLetterId], references: [id], onDelete: Cascade)
+  outgoingLetter OutgoingLetter? @relation(fields: [outgoingLetterId], references: [id], onDelete: Cascade)
+  uploader       User            @relation(fields: [uploadedBy], references: [id])
+
+  @@index([incomingLetterId])
+  @@index([outgoingLetterId])
+  @@map("attachments")
+}
