@@ -107,7 +107,7 @@ export default async function IncomingLettersPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Surat Masuk</h1>
           <p className="text-muted-foreground">Kelola surat masuk dan disposisinya</p>
@@ -186,7 +186,7 @@ export default async function IncomingLettersPage({ searchParams }: PageProps) {
             </Table>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
               Halaman {currentPage} dari {totalPages} · Total {total} data
             </p>

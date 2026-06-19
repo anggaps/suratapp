@@ -101,7 +101,7 @@ export function DispositionList({ dispositions, letterId, canAdd = true }: Dispo
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
         <CardTitle>Disposisi</CardTitle>
         {canAdd && (
         <Dialog open={open} onOpenChange={setOpen}>

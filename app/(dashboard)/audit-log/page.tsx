@@ -228,7 +228,7 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
             </Table>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
               Halaman {currentPage} dari {totalPages} · Total {total} data
             </p>

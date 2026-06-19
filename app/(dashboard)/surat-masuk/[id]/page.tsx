@@ -56,7 +56,7 @@ export default async function IncomingLetterDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/surat-masuk">
@@ -68,7 +68,7 @@ export default async function IncomingLetterDetailPage({ params }: PageProps) {
             <p className="text-muted-foreground">{letter.agendaNumber}</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <WhatsAppShareButton
             recipients={recipients}
             template={notificationData.settings.whatsappTemplate}

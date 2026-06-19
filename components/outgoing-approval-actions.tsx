@@ -85,14 +85,14 @@ export function OutgoingApprovalActions({ letterId, isApproved, rejectionReason 
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-medium">Persetujuan Surat Keluar</p>
           <p className="text-sm text-muted-foreground">
             {rejectionReason ? "Surat ditolak sebelumnya. Anda dapat menyetujuinya kembali." : "Surat menunggu persetujuan."}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10">
