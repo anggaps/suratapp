@@ -29,6 +29,8 @@ interface SidebarProps {
   appName: string;
   institutionName?: string;
   logo?: string | null;
+  variant?: "sidebar" | "drawer";
+  onNavigate?: () => void;
 }
 
 const mainNav = [
@@ -39,14 +41,31 @@ const mainNav = [
   { href: "/galeri", label: "Galeri", icon: Image },
 ];
 
-export function Sidebar({ role, appName, institutionName, logo }: SidebarProps) {
+export function Sidebar({
+  role,
+  appName,
+  institutionName,
+  logo,
+  variant = "sidebar",
+  onNavigate,
+}: SidebarProps) {
   const pathname = usePathname();
   const isAdmin = role === "ADMIN";
   const isPimpinan = role === "PIMPINAN";
   const isStaff = role === "STAFF";
 
+  const isDrawer = variant === "drawer";
+
   return (
-    <aside className="hidden w-64 flex-col border-r bg-background lg:flex">
+    <aside
+      className={cn(
+        "flex w-64 flex-col bg-background",
+        isDrawer ? "h-full" : "hidden border-r lg:flex",
+      )}
+      onClick={(e) => {
+        if (onNavigate && (e.target as Element).closest("a")) onNavigate();
+      }}
+    >
       <div className="flex h-16 items-center gap-2 border-b px-4">
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element

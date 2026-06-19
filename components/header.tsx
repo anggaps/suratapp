@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { LogOut, User, Menu } from "lucide-react";
@@ -29,6 +30,7 @@ interface HeaderProps {
 }
 
 export function Header({ user, appName, institutionName, logo }: HeaderProps) {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const initials = user.name
     ?.split(" ")
     .map((n) => n[0])
@@ -38,7 +40,7 @@ export function Header({ user, appName, institutionName, logo }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-      <Sheet>
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="lg:hidden">
             <Menu className="h-5 w-5" />
@@ -51,6 +53,8 @@ export function Header({ user, appName, institutionName, logo }: HeaderProps) {
             appName={appName}
             institutionName={institutionName}
             logo={logo}
+            variant="drawer"
+            onNavigate={() => setMobileOpen(false)}
           />
         </SheetContent>
       </Sheet>

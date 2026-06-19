@@ -133,7 +133,7 @@ export default async function IncomingLettersPage({ searchParams }: PageProps) {
             showDateRange={true}
           />
 
-          <div className="rounded-md border">
+          <div className="overflow-x-auto rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>

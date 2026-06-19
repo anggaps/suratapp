@@ -184,7 +184,7 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
           <CardTitle>Daftar Log</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-md border">
+          <div className="overflow-x-auto rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
