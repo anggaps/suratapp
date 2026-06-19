@@ -215,7 +215,7 @@ export default function StatusManager({ statuses }: { statuses: LetterStatus[] }
           </div>
 
           <div className="overflow-x-auto rounded-md border">
-            <Table>
+            <Table className="responsive-table">
               <TableHeader>
                 <TableRow>
                   <TableHead>Nama</TableHead>
@@ -226,36 +226,38 @@ export default function StatusManager({ statuses }: { statuses: LetterStatus[] }
               <TableBody>
                 {paged.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                    <TableCell data-label="" colSpan={3} className="text-center text-muted-foreground">
                       Tidak ada data
                     </TableCell>
                   </TableRow>
                 )}
                 {paged.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Nama" className="font-medium">{item.name}</TableCell>
+                    <TableCell data-label="Warna">
                       <Badge style={{ backgroundColor: item.color }}>
                         {item.color}
                       </Badge>
                     </TableCell>
-                    <TableCell className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(item.id)}
-                        disabled={deletingId === item.id}
-                      >
-                        {deletingId === item.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </Button>
+                    <TableCell data-label="Aksi">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(item.id)}
+                          disabled={deletingId === item.id}
+                        >
+                          {deletingId === item.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

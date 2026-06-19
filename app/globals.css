@@ -127,3 +127,59 @@
     @apply font-sans;
     }
 }
+
+/* Responsive tables: collapse each row into a stacked card on small screens.
+   Cells expose their column name via data-label so the value stays readable
+   without horizontal scrolling / zooming. */
+@media (max-width: 767px) {
+  .responsive-table thead {
+    display: none;
+  }
+  .responsive-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .responsive-table tr {
+    display: block;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 0;
+    padding: 0.25rem 0;
+  }
+  .responsive-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    white-space: normal;
+    word-break: break-word;
+  }
+  .responsive-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--muted-foreground);
+    flex-shrink: 0;
+    text-align: left;
+  }
+  /* Cells without a label (e.g. empty-state row) render centered. */
+  .responsive-table td[data-label=""]::before {
+    content: none;
+  }
+  .responsive-table td[data-label=""] {
+    display: block;
+    text-align: center;
+  }
+  /* Cells with long content stack the label above the value. */
+  .responsive-table td.stack {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .responsive-table td.stack::before {
+    margin-bottom: 0.25rem;
+  }
+}

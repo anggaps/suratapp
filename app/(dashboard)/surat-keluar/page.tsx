@@ -146,7 +146,7 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
           />
 
           <div className="overflow-x-auto rounded-md border">
-            <Table>
+            <Table className="responsive-table">
               <TableHeader>
                 <TableRow>
                   <TableHead>No. Agenda</TableHead>
@@ -162,7 +162,7 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
               <TableBody>
                 {letters.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell data-label="" colSpan={8} className="text-center text-muted-foreground">
                       Tidak ada data
                     </TableCell>
                   </TableRow>
@@ -172,24 +172,26 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
                   const canEditDelete = !isPimpinan && !(isStaff && letter.approvedById);
                   return (
                     <TableRow key={letter.id}>
-                      <TableCell>{letter.agendaNumber}</TableCell>
-                      <TableCell>{letter.letterNumber}</TableCell>
-                      <TableCell>{letter.recipient}</TableCell>
-                      <TableCell>{letter.subject}</TableCell>
-                      <TableCell>
+                      <TableCell data-label="No. Agenda">{letter.agendaNumber}</TableCell>
+                      <TableCell data-label="No. Surat">{letter.letterNumber}</TableCell>
+                      <TableCell data-label="Penerima">{letter.recipient}</TableCell>
+                      <TableCell data-label="Perihal">{letter.subject}</TableCell>
+                      <TableCell data-label="Tanggal">
                         {format(new Date(letter.date), "dd MMM yyyy", { locale: id })}
                       </TableCell>
-                      <TableCell>{letter.classification?.name ?? "-"}</TableCell>
-                      <TableCell>
+                      <TableCell data-label="Klasifikasi">{letter.classification?.name ?? "-"}</TableCell>
+                      <TableCell data-label="Status">
                         <Badge className={approval.color}>{approval.label}</Badge>
                       </TableCell>
-                      <TableCell className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/surat-keluar/${letter.id}`}>
-                            <Eye className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        {canEditDelete && <DeleteOutgoingButton id={letter.id} />}
+                      <TableCell data-label="Aksi">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="icon" asChild>
+                            <Link href={`/surat-keluar/${letter.id}`}>
+                              <Eye className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          {canEditDelete && <DeleteOutgoingButton id={letter.id} />}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

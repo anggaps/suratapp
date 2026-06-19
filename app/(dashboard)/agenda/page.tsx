@@ -175,7 +175,7 @@ export default async function AgendaPage({ searchParams }: PageProps) {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table className="responsive-table">
                   <TableHeader>
                     <TableRow>
                       <TableHead>No. Agenda</TableHead>
@@ -190,22 +190,22 @@ export default async function AgendaPage({ searchParams }: PageProps) {
                   <TableBody>
                     {incoming.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground">
+                        <TableCell data-label="" colSpan={7} className="text-center text-muted-foreground">
                           Tidak ada data
                         </TableCell>
                       </TableRow>
                     )}
                     {incoming.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell>{item.agendaNumber}</TableCell>
-                        <TableCell>
+                        <TableCell data-label="No. Agenda">{item.agendaNumber}</TableCell>
+                        <TableCell data-label="Tanggal">
                           {format(new Date(item.date), "dd MMM yyyy", { locale: id })}
                         </TableCell>
-                        <TableCell>{item.letterNumber}</TableCell>
-                        <TableCell>{item.sender}</TableCell>
-                        <TableCell>{item.subject}</TableCell>
-                        <TableCell>{item.classification?.name ?? "-"}</TableCell>
-                        <TableCell>{item.status?.name ?? "-"}</TableCell>
+                        <TableCell data-label="No. Surat">{item.letterNumber}</TableCell>
+                        <TableCell data-label="Pengirim">{item.sender}</TableCell>
+                        <TableCell data-label="Perihal">{item.subject}</TableCell>
+                        <TableCell data-label="Klasifikasi">{item.classification?.name ?? "-"}</TableCell>
+                        <TableCell data-label="Status">{item.status?.name ?? "-"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -222,7 +222,7 @@ export default async function AgendaPage({ searchParams }: PageProps) {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table className="responsive-table">
                   <TableHeader>
                     <TableRow>
                       <TableHead>No. Agenda</TableHead>
@@ -237,22 +237,22 @@ export default async function AgendaPage({ searchParams }: PageProps) {
                   <TableBody>
                     {outgoing.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground">
+                        <TableCell data-label="" colSpan={7} className="text-center text-muted-foreground">
                           Tidak ada data
                         </TableCell>
                       </TableRow>
                     )}
                     {outgoing.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell>{item.agendaNumber}</TableCell>
-                        <TableCell>
+                        <TableCell data-label="No. Agenda">{item.agendaNumber}</TableCell>
+                        <TableCell data-label="Tanggal">
                           {format(new Date(item.date), "dd MMM yyyy", { locale: id })}
                         </TableCell>
-                        <TableCell>{item.letterNumber}</TableCell>
-                        <TableCell>{item.recipient}</TableCell>
-                        <TableCell>{item.subject}</TableCell>
-                        <TableCell>{item.classification?.name ?? "-"}</TableCell>
-                        <TableCell>{item.status?.name ?? "-"}</TableCell>
+                        <TableCell data-label="No. Surat">{item.letterNumber}</TableCell>
+                        <TableCell data-label="Penerima">{item.recipient}</TableCell>
+                        <TableCell data-label="Perihal">{item.subject}</TableCell>
+                        <TableCell data-label="Klasifikasi">{item.classification?.name ?? "-"}</TableCell>
+                        <TableCell data-label="Status">{item.status?.name ?? "-"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

@@ -298,7 +298,7 @@ export default function UserManager({
           </div>
 
           <div className="overflow-x-auto rounded-md border">
-            <Table>
+            <Table className="responsive-table">
               <TableHeader>
                 <TableRow>
                   <TableHead>Nama</TableHead>
@@ -312,16 +312,16 @@ export default function UserManager({
               <TableBody>
                 {paged.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell data-label="" colSpan={6} className="text-center text-muted-foreground">
                       Tidak ada data
                     </TableCell>
                   </TableRow>
                 )}
                 {paged.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Nama" className="font-medium">{user.name}</TableCell>
+                    <TableCell data-label="Email">{user.email}</TableCell>
+                    <TableCell data-label="Peran">
                       <Badge
                         variant={user.role === "ADMIN" ? "default" : user.role === "PIMPINAN" ? "default" : "secondary"}
                         className={user.role === "PIMPINAN" ? "bg-purple-600 hover:bg-purple-700" : ""}
@@ -329,44 +329,46 @@ export default function UserManager({
                         {roleLabels[user.role] ?? user.role}
                       </Badge>
                     </TableCell>
-                    <TableCell>{user.phone ?? "-"}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Telepon">{user.phone ?? "-"}</TableCell>
+                    <TableCell data-label="Status">
                       <Badge variant={user.isActive ? "default" : "destructive"}>
                         {user.isActive ? "Aktif" : "Nonaktif"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleResetPassword(user.id)}
-                        disabled={resettingId === user.id}
-                        title="Reset password"
-                      >
-                        {resettingId === user.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <KeyRound className="h-4 w-4" />
-                        )}
-                      </Button>
-                      {user.id !== currentUserId && (
+                    <TableCell data-label="Aksi">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(user.id)}
-                          disabled={deletingId === user.id}
+                          onClick={() => handleResetPassword(user.id)}
+                          disabled={resettingId === user.id}
+                          title="Reset password"
                         >
-                          {deletingId === user.id ? (
+                          {resettingId === user.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            <Trash2 className="h-4 w-4" />
+                            <KeyRound className="h-4 w-4" />
                           )}
                         </Button>
-                      )}
+                        {user.id !== currentUserId && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(user.id)}
+                            disabled={deletingId === user.id}
+                          >
+                            {deletingId === user.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

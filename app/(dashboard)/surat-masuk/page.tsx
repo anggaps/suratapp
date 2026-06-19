@@ -134,7 +134,7 @@ export default async function IncomingLettersPage({ searchParams }: PageProps) {
           />
 
           <div className="overflow-x-auto rounded-md border">
-            <Table>
+            <Table className="responsive-table">
               <TableHeader>
                 <TableRow>
                   <TableHead>No. Agenda</TableHead>
@@ -150,35 +150,37 @@ export default async function IncomingLettersPage({ searchParams }: PageProps) {
               <TableBody>
                 {letters.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell data-label="" colSpan={8} className="text-center text-muted-foreground">
                       Tidak ada data
                     </TableCell>
                   </TableRow>
                 )}
                 {letters.map((letter) => (
                   <TableRow key={letter.id}>
-                    <TableCell>{letter.agendaNumber}</TableCell>
-                    <TableCell>{letter.letterNumber}</TableCell>
-                    <TableCell>{letter.sender}</TableCell>
-                    <TableCell>{letter.subject}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="No. Agenda">{letter.agendaNumber}</TableCell>
+                    <TableCell data-label="No. Surat">{letter.letterNumber}</TableCell>
+                    <TableCell data-label="Pengirim">{letter.sender}</TableCell>
+                    <TableCell data-label="Perihal">{letter.subject}</TableCell>
+                    <TableCell data-label="Tanggal">
                       {format(new Date(letter.date), "dd MMM yyyy", { locale: id })}
                     </TableCell>
-                    <TableCell>{letter.classification?.name ?? "-"}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Klasifikasi">{letter.classification?.name ?? "-"}</TableCell>
+                    <TableCell data-label="Disposisi">
                       {letter._count.dispositions > 0 ? (
                         <Badge variant="default">Sudah Disposisi</Badge>
                       ) : (
                         <Badge variant="secondary">Belum</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/surat-masuk/${letter.id}`}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      {!isPimpinan && <DeleteIncomingButton id={letter.id} />}
+                    <TableCell data-label="Aksi">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link href={`/surat-masuk/${letter.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        {!isPimpinan && <DeleteIncomingButton id={letter.id} />}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

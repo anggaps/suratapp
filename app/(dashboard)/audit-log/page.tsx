@@ -185,7 +185,7 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="overflow-x-auto rounded-md border">
-            <Table>
+            <Table className="responsive-table">
               <TableHeader>
                 <TableRow>
                   <TableHead>Waktu</TableHead>
@@ -198,27 +198,27 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
               <TableBody>
                 {logs.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    <TableCell data-label="" colSpan={5} className="text-center text-muted-foreground">
                       Tidak ada data
                     </TableCell>
                   </TableRow>
                 )}
                 {logs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="whitespace-nowrap">
+                    <TableCell data-label="Waktu" className="whitespace-nowrap">
                       {format(new Date(log.createdAt), "dd MMM yyyy HH:mm", { locale: id })}
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="Aksi">
                       <Badge className={actionColors[log.action as AuditAction] ?? "bg-muted"}>
                         {actionLabels[log.action as AuditAction] ?? log.action}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="Entitas">
                       {entityLabels[log.entityType as AuditEntityType] ?? log.entityType}
                     </TableCell>
-                    <TableCell>{log.performer.name}</TableCell>
-                    <TableCell>
-                      <pre className="max-w-md overflow-auto rounded-md bg-muted p-2 text-xs whitespace-pre-wrap">
+                    <TableCell data-label="Oleh">{log.performer.name}</TableCell>
+                    <TableCell data-label="Detail" className="stack">
+                      <pre className="max-w-full overflow-auto rounded-md bg-muted p-2 text-xs whitespace-pre-wrap">
                         {formatPayload(log.payload)}
                       </pre>
                     </TableCell>
