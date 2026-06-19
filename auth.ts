@@ -10,7 +10,19 @@ const credentialsSchema = z.object({
   password: z.string().min(1),
 });
 
+// On Vercel, ignore a stale per-deployment NEXTAUTH_URL/AUTH_URL. Each deploy
+// gets a fresh *.vercel.app URL, so a fixed NEXTAUTH_URL goes stale after every
+// redeploy and breaks post-signout redirects (browser lands on a gone
+// deployment -> Vercel "Deployment has failed" page). With trustHost below,
+// Auth.js derives the canonical URL from the incoming request host, which is
+// correct for both the production domain and preview deployments.
+if (process.env.VERCEL) {
+  delete process.env.NEXTAUTH_URL;
+  delete process.env.AUTH_URL;
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
   providers: [
     Credentials({
