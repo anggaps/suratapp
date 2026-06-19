@@ -13,6 +13,47 @@ const profileSchema = z.object({
   phone: z.string().optional(),
 });
 
+const passwordChangeSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Password saat ini wajib diisi"),
+    newPassword: z.string().min(6, "Password baru minimal 6 karakter"),
+    confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Konfirmasi password tidak cocok",
+    path: ["confirmPassword"],
+  });
+
+export async function changePassword(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const raw = Object.fromEntries(formData.entries());
+  const parsed = passwordChangeSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { password: true },
+  });
+  if (!user) throw new Error("Pengguna tidak ditemukan");
+
+  const valid = await bcrypt.compare(parsed.data.currentPassword, user.password);
+  if (!valid) {
+    return { error: { currentPassword: ["Password saat ini salah"] } };
+  }
+
+  const hashedPassword = await bcrypt.hash(parsed.data.newPassword, 10);
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { password: hashedPassword },
+  });
+
+  return { success: true };
+}
+
 export async function updateProfile(formData: FormData) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");

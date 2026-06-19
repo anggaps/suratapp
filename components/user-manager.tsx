@@ -75,6 +75,7 @@ export default function UserManager({
     role: "STAFF",
     phone: "",
     isActive: "true",
+    password: "",
   });
 
   const filtered = useMemo(() => {
@@ -94,7 +95,7 @@ export default function UserManager({
 
   const reset = () => {
     setEditing(null);
-    setForm({ name: "", email: "", role: "STAFF", phone: "", isActive: "true" });
+    setForm({ name: "", email: "", role: "STAFF", phone: "", isActive: "true", password: "" });
     setError("");
   };
 
@@ -106,6 +107,7 @@ export default function UserManager({
       role: user.role,
       phone: user.phone ?? "",
       isActive: user.isActive ? "true" : "false",
+      password: "",
     });
     setOpen(true);
   };
@@ -121,6 +123,9 @@ export default function UserManager({
     formData.append("role", form.role);
     formData.append("phone", form.phone);
     formData.append("isActive", form.isActive);
+    if (!editing) {
+      formData.append("password", form.password);
+    }
 
     try {
       const result = editing
@@ -195,7 +200,7 @@ export default function UserManager({
                 <DialogDescription>
                   {editing
                     ? "Perbarui data pengguna."
-                    : "Pengguna baru akan menggunakan kata sandi bawaan dari pengaturan sistem."}
+                    : "Pengguna baru akan menggunakan kata sandi bawaan dari pengaturan jika dikosongkan."}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -258,6 +263,22 @@ export default function UserManager({
                     </SelectContent>
                   </Select>
                 </div>
+                {!editing && (
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="Kosongkan untuk pakai kata sandi bawaan"
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Minimal 6 karakter. Jika dikosongkan, gunakan kata sandi bawaan dari pengaturan sistem.
+                    </p>
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>

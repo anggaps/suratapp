@@ -13,6 +13,11 @@ const userSchema = z.object({
   role: z.enum(["ADMIN", "PIMPINAN", "STAFF"]),
   phone: z.string().optional(),
   isActive: z.enum(["true", "false"]).optional(),
+  password: z
+    .string()
+    .min(6, "Password minimal 6 karakter")
+    .optional()
+    .or(z.literal("")),
 });
 
 export async function createUser(formData: FormData) {
@@ -27,7 +32,9 @@ export async function createUser(formData: FormData) {
 
   const settings = await prisma.setting.findFirst();
   const defaultPassword = settings?.defaultPassword ?? "password123";
-  const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+  const providedPassword = (parsed.data.password ?? "").trim();
+  const passwordToHash = providedPassword.length > 0 ? providedPassword : defaultPassword;
+  const hashedPassword = await bcrypt.hash(passwordToHash, 10);
 
   try {
     await prisma.user.create({

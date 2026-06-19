@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Loader2, Camera, Power } from "lucide-react";
+import { Loader2, Camera, Power, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { updateProfile, deactivateAccount } from "@/lib/actions/profile.actions";
+import { updateProfile, changePassword, deactivateAccount } from "@/lib/actions/profile.actions";
 
 interface ProfileFormProps {
   user: {
@@ -45,6 +45,13 @@ export default function ProfileForm({ user }: ProfileFormProps) {
     phone: user.phone ?? "",
   });
   const [avatarPreview, setAvatarPreview] = useState(user.avatar);
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwForm, setPwForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +85,36 @@ export default function ProfileForm({ user }: ProfileFormProps) {
     } finally {
       setLoading(false);
       router.refresh();
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwLoading(true);
+    setPwError("");
+
+    const formData = new FormData();
+    formData.append("currentPassword", pwForm.currentPassword);
+    formData.append("newPassword", pwForm.newPassword);
+    formData.append("confirmPassword", pwForm.confirmPassword);
+
+    try {
+      const result = await changePassword(formData);
+
+      if (result && "error" in result) {
+        const err = result.error as Record<string, string[]>;
+        setPwError(Object.values(err).flat().join(", "));
+        return;
+      }
+
+      toast.success("Password berhasil diubah");
+      setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (error) {
+      console.error(error);
+      setPwError((error as Error).message || "Terjadi kesalahan");
+      toast.error("Gagal mengubah password");
+    } finally {
+      setPwLoading(false);
     }
   };
 
@@ -198,6 +235,73 @@ export default function ProfileForm({ user }: ProfileFormProps) {
             "Simpan Perubahan"
           )}
         </Button>
+      </form>
+
+      <form onSubmit={handlePasswordSubmit} className="space-y-4">
+        {pwError && (
+          <Alert variant="destructive">
+            <AlertDescription>{pwError}</AlertDescription>
+          </Alert>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              Ubah Password
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Password Saat Ini</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                autoComplete="current-password"
+                value={pwForm.currentPassword}
+                onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })}
+                required
+              />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">Password Baru</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  value={pwForm.newPassword}
+                  onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Konfirmasi Password Baru</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  value={pwForm.confirmPassword}
+                  onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Password baru minimal 6 karakter.
+            </p>
+            <Button type="submit" disabled={pwLoading}>
+              {pwLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Menyimpan...
+                </>
+              ) : (
+                "Ubah Password"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
       </form>
 
       {user.role === "STAFF" && (
