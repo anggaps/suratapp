@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, Loader2, Plus } from "lucide-react";
+import { Pencil, Trash2, Loader2, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,8 @@ interface LetterStatus {
   color: string;
 }
 
+const PAGE_SIZE = 10;
+
 export default function StatusManager({ statuses }: { statuses: LetterStatus[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -46,7 +48,19 @@ export default function StatusManager({ statuses }: { statuses: LetterStatus[] }
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [form, setForm] = useState({ name: "", color: "#3b82f6" });
+
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return statuses;
+    return statuses.filter((s) => s.name.toLowerCase().includes(term));
+  }, [statuses, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const reset = () => {
     setEditing(null);
@@ -186,7 +200,20 @@ export default function StatusManager({ statuses }: { statuses: LetterStatus[] }
         <CardHeader>
           <CardTitle>Daftar Status Sifat Surat</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Cari nama status..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="pl-9"
+            />
+          </div>
+
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -197,14 +224,14 @@ export default function StatusManager({ statuses }: { statuses: LetterStatus[] }
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {statuses.length === 0 && (
+                {paged.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground">
                       Tidak ada data
                     </TableCell>
                   </TableRow>
                 )}
-                {statuses.map((item) => (
+                {paged.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>
@@ -234,6 +261,32 @@ export default function StatusManager({ statuses }: { statuses: LetterStatus[] }
                 ))}
               </TableBody>
             </Table>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Halaman {currentPage} dari {totalPages} · Total {filtered.length} data
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage <= 1}
+                onClick={() => setPage(currentPage - 1)}
+              >
+                <ChevronLeft className="mr-1 h-4 w-4" />
+                Sebelumnya
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => setPage(currentPage + 1)}
+              >
+                Selanjutnya
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -17,12 +17,24 @@ export default async function DashboardLayout({
 
   const settings = await prisma.setting.findFirst();
   const appName = settings?.appName ?? "SuratAPP";
+  const institutionName = settings?.institutionName ?? "";
+  const logo = settings?.logo ?? null;
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar role={session.user.role ?? "STAFF"} appName={appName} />
+      <Sidebar
+        role={session.user.role ?? "STAFF"}
+        appName={appName}
+        institutionName={institutionName}
+        logo={logo}
+      />
       <div className="flex flex-1 flex-col">
-        <Header user={session.user} appName={appName} />
+        <Header
+          user={session.user}
+          appName={appName}
+          institutionName={institutionName}
+          logo={logo}
+        />
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>

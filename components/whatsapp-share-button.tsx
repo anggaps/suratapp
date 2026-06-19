@@ -29,6 +29,8 @@ import {
   cleanPhoneNumber,
   WhatsAppTemplateData,
 } from "@/lib/utils/whatsapp";
+import { recordWhatsappLog, type WhatsappLetterType } from "@/lib/actions/whatsapp.actions";
+import { toast } from "sonner";
 
 interface NotificationRecipient {
   id: string;
@@ -41,6 +43,8 @@ interface WhatsAppShareButtonProps {
   template?: string;
   data: WhatsAppTemplateData;
   label?: string;
+  letterType?: WhatsappLetterType;
+  letterId?: string;
 }
 
 export function WhatsAppShareButton({
@@ -48,6 +52,8 @@ export function WhatsAppShareButton({
   template,
   data,
   label = "Kirim Notifikasi WA",
+  letterType,
+  letterId,
 }: WhatsAppShareButtonProps) {
   const [open, setOpen] = useState(false);
   const [selectedRecipientId, setSelectedRecipientId] = useState<string>("");
@@ -80,14 +86,33 @@ export function WhatsAppShareButton({
 
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedRecipientId("");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCustomPhone("");
     }
   }, [open]);
 
-  const handleOpenWhatsApp = () => {
+  const handleOpenWhatsApp = async () => {
     if (!waLink) return;
     window.open(waLink, "_blank", "noopener,noreferrer");
+
+    if (letterType && letterId) {
+      try {
+        await recordWhatsappLog({
+          letterType,
+          letterId,
+          recipientName: selectedRecipient?.name ?? null,
+          recipientPhone: cleanPhoneNumber(phone),
+          message,
+        });
+      } catch (error) {
+        console.error("Gagal mencatat log WhatsApp:", error);
+        toast.error("Log pengiriman WhatsApp gagal dicatat");
+      }
+    }
+
+    setOpen(false);
   };
 
   return (

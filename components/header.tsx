@@ -24,9 +24,11 @@ interface HeaderProps {
     avatar?: string | null;
   };
   appName: string;
+  institutionName?: string;
+  logo?: string | null;
 }
 
-export function Header({ user, appName }: HeaderProps) {
+export function Header({ user, appName, institutionName, logo }: HeaderProps) {
   const initials = user.name
     ?.split(" ")
     .map((n) => n[0])
@@ -44,7 +46,12 @@ export function Header({ user, appName }: HeaderProps) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-64 p-0">
-          <Sidebar role={user.role ?? "STAFF"} appName={appName} />
+          <Sidebar
+            role={user.role ?? "STAFF"}
+            appName={appName}
+            institutionName={institutionName}
+            logo={logo}
+          />
         </SheetContent>
       </Sheet>
 

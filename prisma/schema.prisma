@@ -36,6 +36,7 @@ model User {
   createdClassifications  Classification[]
   createdLetterStatuses   LetterStatus[]
   auditLogs               AuditLog[]
+  whatsappLogs            WhatsappLog[]
 
   @@map("users")
 }
@@ -192,4 +193,21 @@ model Attachment {
   @@index([incomingLetterId])
   @@index([outgoingLetterId])
   @@map("attachments")
+}
+
+model WhatsappLog {
+  id             String   @id @default(uuid())
+  letterType     String
+  letterId       String
+  recipientName  String?
+  recipientPhone String
+  message        String
+  sentById       String
+  createdAt      DateTime @default(now())
+
+  sentBy User @relation(fields: [sentById], references: [id])
+
+  @@index([letterType, letterId])
+  @@index([createdAt])
+  @@map("whatsapp_logs")
 }

@@ -26,6 +26,9 @@ interface PageProps {
     page?: string;
     entityType?: AuditEntityType;
     action?: AuditAction;
+    fromDate?: string;
+    toDate?: string;
+    search?: string;
   }>;
 }
 
@@ -70,13 +73,18 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
     redirect("/dashboard");
   }
 
-  const { page, entityType, action } = await searchParams;
+  const { page, entityType, action, fromDate, toDate, search } = await searchParams;
   const currentPage = Number(page) || 1;
-  const pageSize = 20;
+
+  const settings = await prisma.setting.findFirst();
+  const pageSize = settings?.itemsPerPage ?? 10;
 
   const { logs, total, totalPages } = await getAllAuditLogs({
     entityType,
     action,
+    fromDate,
+    toDate,
+    search,
     page: currentPage,
     pageSize,
   });
@@ -85,6 +93,9 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
     const params = new URLSearchParams();
     if (entityType) params.set("entityType", entityType);
     if (action) params.set("action", action);
+    if (fromDate) params.set("fromDate", fromDate);
+    if (toDate) params.set("toDate", toDate);
+    if (search) params.set("search", search);
     params.set("page", String(targetPage));
     return `/audit-log?${params.toString()}`;
   };
@@ -131,6 +142,34 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="w-[170px] space-y-1">
+              <label className="text-xs">Dari Tanggal</label>
+              <input
+                type="date"
+                name="fromDate"
+                defaultValue={fromDate ?? ""}
+                className="w-full rounded-md border px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="w-[170px] space-y-1">
+              <label className="text-xs">Sampai Tanggal</label>
+              <input
+                type="date"
+                name="toDate"
+                defaultValue={toDate ?? ""}
+                className="w-full rounded-md border px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="w-[220px] space-y-1">
+              <label className="text-xs">Pencarian</label>
+              <input
+                type="text"
+                name="search"
+                defaultValue={search ?? ""}
+                placeholder="Cari entitas / pelaku / detail"
+                className="w-full rounded-md border px-3 py-2 text-sm"
+              />
             </div>
             <Button type="submit" variant="secondary">Tampilkan</Button>
             <Button variant="outline" asChild>

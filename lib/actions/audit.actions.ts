@@ -60,17 +60,36 @@ export async function getRecentAuditLogs(limit = 20) {
 export async function getAllAuditLogs(options?: {
   entityType?: AuditEntityType;
   action?: AuditAction;
+  fromDate?: string;
+  toDate?: string;
+  search?: string;
   page?: number;
   pageSize?: number;
 }) {
   await requireAdminOrPimpinan();
 
-  const { entityType, action, page = 1, pageSize = 20 } = options ?? {};
+  const { entityType, action, fromDate, toDate, search, page = 1, pageSize = 20 } = options ?? {};
   const skip = (page - 1) * pageSize;
 
   const where: Record<string, unknown> = {};
   if (entityType) where.entityType = entityType;
   if (action) where.action = action;
+
+  if (fromDate || toDate) {
+    const createdAtFilter: Record<string, Date> = {};
+    if (fromDate) createdAtFilter.gte = new Date(`${fromDate}T00:00:00`);
+    if (toDate) createdAtFilter.lte = new Date(`${toDate}T23:59:59.999`);
+    where.createdAt = createdAtFilter;
+  }
+
+  if (search && search.trim()) {
+    const term = search.trim();
+    where.OR = [
+      { entityId: { contains: term, mode: "insensitive" } },
+      { payload: { contains: term, mode: "insensitive" } },
+      { performer: { name: { contains: term, mode: "insensitive" } } },
+    ];
+  }
 
   const [logs, total] = await Promise.all([
     prisma.auditLog.findMany({

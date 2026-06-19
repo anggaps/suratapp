@@ -22,5 +22,10 @@ export default async function UsersPage() {
     },
   });
 
-  return <UserManager users={users} currentUserId={session.user.id} />;
+  const settings = await prisma.setting.findFirst();
+  const pageSize = settings?.itemsPerPage ?? 10;
+
+  return (
+    <UserManager users={users} currentUserId={session.user.id} pageSize={pageSize} />
+  );
 }

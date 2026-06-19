@@ -15,9 +15,11 @@ import { WhatsAppShareButton } from "@/components/whatsapp-share-button";
 import {
   getNotificationRecipients,
   getIncomingLetterNotificationData,
+  getWhatsappLogsForLetter,
 } from "@/lib/actions/whatsapp.actions";
 import { getAuditLogsForEntity } from "@/lib/actions/audit.actions";
 import { AuditLogList } from "@/components/audit-log-list";
+import { WhatsappLogList } from "@/components/whatsapp-log-list";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -45,10 +47,11 @@ export default async function IncomingLetterDetailPage({ params }: PageProps) {
 
   if (!letter) notFound();
 
-  const [recipients, notificationData, auditLogs] = await Promise.all([
+  const [recipients, notificationData, auditLogs, whatsappLogs] = await Promise.all([
     getNotificationRecipients(),
     getIncomingLetterNotificationData(letterId),
     getAuditLogsForEntity("IncomingLetter", letterId),
+    getWhatsappLogsForLetter("INCOMING", letterId),
   ]);
 
   return (
@@ -69,6 +72,8 @@ export default async function IncomingLetterDetailPage({ params }: PageProps) {
           <WhatsAppShareButton
             recipients={recipients}
             template={notificationData.settings.whatsappTemplate}
+            letterType="INCOMING"
+            letterId={letter.id}
             data={{
               letterNumber: notificationData.letter.letterNumber,
               agendaNumber: notificationData.letter.agendaNumber,
@@ -156,6 +161,8 @@ export default async function IncomingLetterDetailPage({ params }: PageProps) {
       )}
 
       <DispositionList dispositions={letter.dispositions} letterId={letter.id} canAdd={canManageDisposisi} />
+
+      <WhatsappLogList logs={whatsappLogs} />
 
       <AuditLogList logs={auditLogs} />
     </div>

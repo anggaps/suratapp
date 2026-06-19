@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, Loader2, Plus, KeyRound } from "lucide-react";
+import { Pencil, Trash2, Loader2, Plus, KeyRound, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,21 @@ interface User {
   isActive: boolean;
 }
 
-export default function UserManager({ users, currentUserId }: { users: User[]; currentUserId: string }) {
+const roleLabels: Record<string, string> = {
+  ADMIN: "Admin",
+  PIMPINAN: "Pimpinan",
+  STAFF: "Staff",
+};
+
+export default function UserManager({
+  users,
+  currentUserId,
+  pageSize = 10,
+}: {
+  users: User[];
+  currentUserId: string;
+  pageSize?: number;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
@@ -53,6 +67,8 @@ export default function UserManager({ users, currentUserId }: { users: User[]; c
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -60,6 +76,21 @@ export default function UserManager({ users, currentUserId }: { users: User[]; c
     phone: "",
     isActive: "true",
   });
+
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return users;
+    return users.filter((u) =>
+      [u.name, u.email, u.phone ?? "", roleLabels[u.role] ?? u.role]
+        .join(" ")
+        .toLowerCase()
+        .includes(term),
+    );
+  }, [users, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paged = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const reset = () => {
     setEditing(null);
@@ -252,7 +283,20 @@ export default function UserManager({ users, currentUserId }: { users: User[]; c
         <CardHeader>
           <CardTitle>Daftar Pengguna</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Cari nama, email, telepon, peran..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="pl-9"
+            />
+          </div>
+
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -266,14 +310,14 @@ export default function UserManager({ users, currentUserId }: { users: User[]; c
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.length === 0 && (
+                {paged.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground">
                       Tidak ada data
                     </TableCell>
                   </TableRow>
                 )}
-                {users.map((user) => (
+                {paged.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
@@ -282,7 +326,7 @@ export default function UserManager({ users, currentUserId }: { users: User[]; c
                         variant={user.role === "ADMIN" ? "default" : user.role === "PIMPINAN" ? "default" : "secondary"}
                         className={user.role === "PIMPINAN" ? "bg-purple-600 hover:bg-purple-700" : ""}
                       >
-                        {user.role === "ADMIN" ? "Admin" : user.role === "PIMPINAN" ? "Pimpinan" : "Staff"}
+                        {roleLabels[user.role] ?? user.role}
                       </Badge>
                     </TableCell>
                     <TableCell>{user.phone ?? "-"}</TableCell>
@@ -328,6 +372,32 @@ export default function UserManager({ users, currentUserId }: { users: User[]; c
                 ))}
               </TableBody>
             </Table>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Halaman {currentPage} dari {totalPages} · Total {filtered.length} data
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage <= 1}
+                onClick={() => setPage(currentPage - 1)}
+              >
+                <ChevronLeft className="mr-1 h-4 w-4" />
+                Sebelumnya
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => setPage(currentPage + 1)}
+              >
+                Selanjutnya
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

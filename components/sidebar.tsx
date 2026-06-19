@@ -27,6 +27,8 @@ import {
 interface SidebarProps {
   role: string;
   appName: string;
+  institutionName?: string;
+  logo?: string | null;
 }
 
 const mainNav = [
@@ -37,7 +39,7 @@ const mainNav = [
   { href: "/galeri", label: "Galeri", icon: Image },
 ];
 
-export function Sidebar({ role, appName }: SidebarProps) {
+export function Sidebar({ role, appName, institutionName, logo }: SidebarProps) {
   const pathname = usePathname();
   const isAdmin = role === "ADMIN";
   const isPimpinan = role === "PIMPINAN";
@@ -45,10 +47,24 @@ export function Sidebar({ role, appName }: SidebarProps) {
 
   return (
     <aside className="hidden w-64 flex-col border-r bg-background lg:flex">
-      <div className="flex h-16 items-center border-b px-6">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <MailOpen className="h-6 w-6 text-primary" />
-          <span>{appName}</span>
+      <div className="flex h-16 items-center gap-2 border-b px-4">
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logo}
+            alt={appName}
+            className="h-9 w-9 shrink-0 rounded-md object-cover"
+          />
+        ) : (
+          <MailOpen className="h-6 w-6 shrink-0 text-primary" />
+        )}
+        <Link href="/dashboard" className="flex flex-col leading-tight">
+          <span className="text-sm font-semibold">{appName}</span>
+          {institutionName && (
+            <span className="truncate text-xs text-muted-foreground">
+              {institutionName}
+            </span>
+          )}
         </Link>
       </div>
 

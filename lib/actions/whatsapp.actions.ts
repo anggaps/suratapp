@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 
@@ -99,4 +100,54 @@ export async function getOutgoingLetterNotificationData(id: string) {
       whatsappTemplate: settings?.whatsappTemplate,
     },
   };
+}
+
+export type WhatsappLetterType = "INCOMING" | "OUTGOING";
+
+export async function recordWhatsappLog(input: {
+  letterType: WhatsappLetterType;
+  letterId: string;
+  recipientName: string | null;
+  recipientPhone: string;
+  message: string;
+}) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  await prisma.whatsappLog.create({
+    data: {
+      letterType: input.letterType,
+      letterId: input.letterId,
+      recipientName: input.recipientName,
+      recipientPhone: input.recipientPhone,
+      message: input.message,
+      sentById: session.user.id,
+    },
+  });
+
+  revalidatePath("/surat-masuk");
+  revalidatePath("/surat-keluar");
+  return { success: true };
+}
+
+export async function getWhatsappLogsForLetter(
+  letterType: WhatsappLetterType,
+  letterId: string,
+) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const logs = await prisma.whatsappLog.findMany({
+    where: { letterType, letterId },
+    include: { sentBy: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return logs.map((log) => ({
+    id: log.id,
+    recipientName: log.recipientName,
+    recipientPhone: log.recipientPhone,
+    createdAt: log.createdAt,
+    sentByName: log.sentBy.name,
+  }));
 }

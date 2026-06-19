@@ -16,9 +16,11 @@ import { WhatsAppShareButton } from "@/components/whatsapp-share-button";
 import {
   getNotificationRecipients,
   getOutgoingLetterNotificationData,
+  getWhatsappLogsForLetter,
 } from "@/lib/actions/whatsapp.actions";
 import { getAuditLogsForEntity } from "@/lib/actions/audit.actions";
 import { AuditLogList } from "@/components/audit-log-list";
+import { WhatsappLogList } from "@/components/whatsapp-log-list";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -59,10 +61,11 @@ export default async function OutgoingLetterDetailPage({ params }: PageProps) {
   const canEditDelete = !isPimpinan && !(isStaff && letter.approvedById);
   const canApproveReject = isAdmin || isPimpinan;
 
-  const [recipients, notificationData, auditLogs] = await Promise.all([
+  const [recipients, notificationData, auditLogs, whatsappLogs] = await Promise.all([
     getNotificationRecipients(),
     getOutgoingLetterNotificationData(letterId),
     getAuditLogsForEntity("OutgoingLetter", letterId),
+    getWhatsappLogsForLetter("OUTGOING", letterId),
   ]);
 
   return (
@@ -83,6 +86,8 @@ export default async function OutgoingLetterDetailPage({ params }: PageProps) {
           <WhatsAppShareButton
             recipients={recipients}
             template={notificationData.settings.whatsappTemplate}
+            letterType="OUTGOING"
+            letterId={letter.id}
             data={{
               letterNumber: notificationData.letter.letterNumber,
               agendaNumber: notificationData.letter.agendaNumber,
@@ -188,6 +193,8 @@ export default async function OutgoingLetterDetailPage({ params }: PageProps) {
           rejectionReason={letter.rejectionReason}
         />
       )}
+
+      <WhatsappLogList logs={whatsappLogs} />
 
       <AuditLogList logs={auditLogs} />
     </div>
