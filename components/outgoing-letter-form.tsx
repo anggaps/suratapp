@@ -101,6 +101,7 @@ export function OutgoingLetterForm({
         },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form's watch() is not memoizable
   const currentYear = watch("date") ? new Date(watch("date")).getFullYear() : new Date().getFullYear();
 
   const regenerateLetterNumber = async () => {

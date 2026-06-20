@@ -88,7 +88,6 @@ export function WhatsAppShareButton({
     if (!open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedRecipientId("");
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCustomPhone("");
     }
   }, [open]);

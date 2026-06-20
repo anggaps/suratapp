@@ -5,7 +5,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { uploadFile, deleteFile } from "@/lib/storage";
+import { uploadFile } from "@/lib/storage";
 
 const profileSchema = z.object({
   name: z.string().min(1, "Nama wajib diisi"),

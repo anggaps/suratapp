@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +29,6 @@ interface PageProps {
 
 export default async function AgendaPage({ searchParams }: PageProps) {
   const { from, to, q, classificationId, statusId } = await searchParams;
-  const today = format(new Date(), "yyyy-MM-dd");
   const fromDate = from && isValid(parseISO(from)) ? parseISO(from) : new Date();
   const toDate = to && isValid(parseISO(to)) ? parseISO(to) : new Date();
 

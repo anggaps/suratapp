@@ -51,7 +51,6 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const isAdmin = role === "ADMIN";
-  const isStaff = role === "STAFF";
 
   const isDrawer = variant === "drawer";
 

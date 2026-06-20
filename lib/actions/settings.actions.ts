@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { uploadFile, deleteFile } from "@/lib/storage";
+import { uploadFile } from "@/lib/storage";
 import { parseLetterNumberFormat } from "@/lib/utils/letter-number";
 
 const settingsSchema = z.object({

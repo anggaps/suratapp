@@ -7,7 +7,6 @@ import { id } from "date-fns/locale";
 import { MailOpen, Send, FileText, Users, TrendingUp, TrendingDown, History } from "lucide-react";
 import { DashboardChart } from "@/components/dashboard-chart";
 import { getRecentAuditLogs } from "@/lib/actions/audit.actions";
-import { AuditLogList } from "@/components/audit-log-list";
 
 async function getDashboardData() {
   const todayStart = startOfDay(new Date());

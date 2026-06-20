@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Download, ImageIcon } from "lucide-react";
@@ -60,6 +59,7 @@ export default async function GalleryPage() {
               >
                 <div className="aspect-square bg-muted">
                   {isImage(a.mimeType) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={a.url}
                       alt={a.originalName}

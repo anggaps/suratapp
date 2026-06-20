@@ -111,6 +111,7 @@ export default function SettingsForm({ settings }: SettingsFormProps) {
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
               {logoPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoPreview} alt="Logo" className="h-16 w-16 rounded-md object-cover" />
               ) : (
                 <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted">

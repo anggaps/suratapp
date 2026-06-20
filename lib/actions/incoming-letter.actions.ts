@@ -207,7 +207,7 @@ export async function updateIncomingLetter(
 }
 
 export async function deleteIncomingLetter(id: string) {
-  const user = await requireRole(UserRole.ADMIN);
+  await requireRole(UserRole.ADMIN);
 
   const letter = await prisma.incomingLetter.findUnique({
     where: { id },

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -75,7 +74,6 @@ export function IncomingLetterForm({
   defaultLetterNumber = "",
   letterNumberFormat,
 }: IncomingLetterFormProps) {
-  const router = useRouter();
   const isEdit = !!letter;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -105,6 +103,7 @@ export function IncomingLetterForm({
         },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form's watch() is not memoizable
   const currentYear = watch("date") ? new Date(watch("date")).getFullYear() : new Date().getFullYear();
 
   const [regenerating, setRegenerating] = useState(false);
