@@ -135,16 +135,19 @@ export default async function DashboardPage() {
           title: "Disetujui Hari Ini",
           value: data.outgoingApprovedToday,
           icon: FileText,
+          href: "/surat-keluar?approval=disetujui",
         },
         {
           title: "Disposisi Hari Ini",
           value: data.dispositionToday,
           icon: FileText,
+          href: "/surat-masuk",
         },
         {
           title: "Pengguna Aktif",
           value: data.activeUsers,
           icon: Users,
+          href: "/pengguna",
         },
       ]
     : [
@@ -153,28 +156,33 @@ export default async function DashboardPage() {
           value: data.incomingToday,
           icon: MailOpen,
           percent: data.incomingPercent,
+          href: "/surat-masuk",
         },
         {
           title: "Surat Keluar Hari Ini",
           value: data.outgoingToday,
           icon: Send,
           percent: data.outgoingPercent,
+          href: "/surat-keluar",
         },
         {
           title: "Disposisi Hari Ini",
           value: data.dispositionToday,
           icon: FileText,
+          href: "/surat-masuk",
         },
         {
           title: "Transaksi Surat Hari Ini",
           value: data.transactionToday,
           icon: FileText,
           percent: data.transactionPercent,
+          href: "/agenda",
         },
         {
           title: "Pengguna Aktif",
           value: data.activeUsers,
           icon: Users,
+          href: "/pengguna",
         },
       ];
 
@@ -242,12 +250,12 @@ export default async function DashboardPage() {
               <p className="text-sm text-muted-foreground">Belum ada disposisi</p>
             )}
             {data.recentDispositions.map((d) => (
-              <div key={d.id} className="border-b pb-2 last:border-0">
+              <Link key={d.id} href={`/surat-masuk/${d.incomingLetter.id}`} className="block border-b pb-2 last:border-0 hover:underline">
                 <p className="text-sm font-medium">{d.incomingLetter.subject}</p>
                 <p className="text-xs text-muted-foreground">
                   Disposisi ke {d.target} · {d.creator.name}
                 </p>
-              </div>
+              </Link>
             ))}
           </CardContent>
         </Card>
@@ -263,12 +271,12 @@ export default async function DashboardPage() {
               <p className="text-sm text-muted-foreground">Belum ada surat masuk</p>
             )}
             {data.recentIncoming.map((item) => (
-              <div key={item.id} className="border-b pb-2 last:border-0">
+              <Link key={item.id} href={`/surat-masuk/${item.id}`} className="block border-b pb-2 last:border-0 hover:underline">
                 <p className="text-sm font-medium">{item.subject}</p>
                 <p className="text-xs text-muted-foreground">
                   {item.sender} · {item.classification?.name ?? "-"}
                 </p>
-              </div>
+              </Link>
             ))}
           </CardContent>
         </Card>
@@ -285,22 +293,39 @@ export default async function DashboardPage() {
             {data.recentAuditLogs.length === 0 && (
               <p className="text-sm text-muted-foreground">Belum ada aktivitas</p>
             )}
-            {data.recentAuditLogs.map((log) => (
-              <div key={log.id} className="border-b pb-2 last:border-0">
-                <p className="text-sm font-medium">
-                  {log.action === "CREATE" && "Dibuat"}
-                  {log.action === "UPDATE" && "Diperbarui"}
-                  {log.action === "DELETE" && "Dihapus"} {" "}
-                  {log.entityType === "IncomingLetter" && "Surat Masuk"}
-                  {log.entityType === "OutgoingLetter" && "Surat Keluar"}
-                  {log.entityType === "IncomingDisposition" && "Disposisi"}
-                  {log.entityType === "Attachment" && "Lampiran"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {log.performer.name} · {format(new Date(log.createdAt), "dd MMM yyyy HH:mm", { locale: id })}
-                </p>
-              </div>
-            ))}
+            {data.recentAuditLogs.map((log) => {
+              const href =
+                log.entityType === "IncomingLetter"
+                  ? `/surat-masuk/${log.entityId}`
+                  : log.entityType === "OutgoingLetter"
+                    ? `/surat-keluar/${log.entityId}`
+                    : null;
+              const row = (
+                <>
+                  <p className="text-sm font-medium">
+                    {log.action === "CREATE" && "Dibuat"}
+                    {log.action === "UPDATE" && "Diperbarui"}
+                    {log.action === "DELETE" && "Dihapus"} {" "}
+                    {log.entityType === "IncomingLetter" && "Surat Masuk"}
+                    {log.entityType === "OutgoingLetter" && "Surat Keluar"}
+                    {log.entityType === "IncomingDisposition" && "Disposisi"}
+                    {log.entityType === "Attachment" && "Lampiran"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {log.performer.name} · {format(new Date(log.createdAt), "dd MMM yyyy HH:mm", { locale: id })}
+                  </p>
+                </>
+              );
+              return href ? (
+                <Link key={log.id} href={href} className="block border-b pb-2 last:border-0 hover:underline">
+                  {row}
+                </Link>
+              ) : (
+                <div key={log.id} className="border-b pb-2 last:border-0">
+                  {row}
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
         )}
