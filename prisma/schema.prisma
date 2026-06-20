@@ -66,8 +66,8 @@ model Setting {
   defaultPassword  String @default("password123")
   itemsPerPage     Int    @default(10)
   logo             String?
-  incomingLetterFormat String @default("{sequence}/{classificationCode}/{statusCode}/{year}")
-  outgoingLetterFormat String @default("{sequence}/{classificationCode}/{statusCode}/{year}")
+  incomingLetterFormat String @default("{nomorUrut}/{kodeKlasifikasi}/{kodeStatus}/{tahun}")
+  outgoingLetterFormat String @default("{nomorUrut}/{kodeKlasifikasi}/{kodeStatus}/{tahun}")
   whatsappTemplate String @default("Assalamu'alaikum Wr. Wb.\n\nYth. {namaPenerima},\nKami informasikan mengenai surat dengan nomor {nomorSurat} perihal \"{perihal}\".\n\nTanggal Surat: {tanggal}\nPengirim: {pengirim}\nPenerima: {penerima}\n\nTerima kasih.\nWassalamu'alaikum Wr. Wb.")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

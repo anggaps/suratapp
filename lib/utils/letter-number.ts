@@ -52,8 +52,8 @@ export async function generateLetterNumber(params: LetterNumberParams): Promise<
   const settings = await prisma.setting.findFirst();
   const formatTemplate =
     type === "incoming"
-      ? settings?.incomingLetterFormat ?? "{sequence}/{classificationCode}/{statusCode}/{year}"
-      : settings?.outgoingLetterFormat ?? "{sequence}/{classificationCode}/{statusCode}/{year}";
+      ? settings?.incomingLetterFormat ?? "{nomorUrut}/{kodeKlasifikasi}/{kodeStatus}/{tahun}"
+      : settings?.outgoingLetterFormat ?? "{nomorUrut}/{kodeKlasifikasi}/{kodeStatus}/{tahun}";
 
   const classification = classificationId
     ? await prisma.classification.findUnique({ where: { id: classificationId } })
@@ -80,16 +80,29 @@ export async function generateLetterNumber(params: LetterNumberParams): Promise<
   const sequence = String(maxSequence + 1).padStart(4, "0");
 
   const letterNumber = formatTemplate
+    .replace(/\{nomorUrut\}/g, sequence)
     .replace(/\{sequence\}/g, sequence)
+    .replace(/\{kodeKlasifikasi\}/g, classificationCode)
     .replace(/\{classificationCode\}/g, classificationCode)
+    .replace(/\{kodeStatus\}/g, statusCode)
     .replace(/\{statusCode\}/g, statusCode)
+    .replace(/\{tahun\}/g, String(year))
     .replace(/\{year\}/g, String(year));
 
   return letterNumber;
 }
 
 export function parseLetterNumberFormat(format: string): boolean {
-  const allowedTokens = ["{sequence}", "{classificationCode}", "{statusCode}", "{year}"];
+  const allowedTokens = [
+    "{nomorUrut}",
+    "{sequence}",
+    "{kodeKlasifikasi}",
+    "{classificationCode}",
+    "{kodeStatus}",
+    "{statusCode}",
+    "{tahun}",
+    "{year}",
+  ];
   const tokens = format.match(/\{[^}]+\}/g) || [];
   return tokens.every((token) => allowedTokens.includes(token));
 }

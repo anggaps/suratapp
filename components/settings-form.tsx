@@ -222,7 +222,7 @@ export default function SettingsForm({ settings }: SettingsFormProps) {
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Token: {"{"}sequence{"}"}, {"{"}classificationCode{"}"}, {"{"}statusCode{"}"}, {"{"}year{"}"}
+                  Token: {"{"}nomorUrut{"}"}, {"{"}kodeKlasifikasi{"}"}, {"{"}kodeStatus{"}"}, {"{"}tahun{"}"}
                 </p>
               </div>
               <div className="space-y-2">
@@ -234,7 +234,7 @@ export default function SettingsForm({ settings }: SettingsFormProps) {
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Token: {"{"}sequence{"}"}, {"{"}classificationCode{"}"}, {"{"}statusCode{"}"}, {"{"}year{"}"}
+                  Token: {"{"}nomorUrut{"}"}, {"{"}kodeKlasifikasi{"}"}, {"{"}kodeStatus{"}"}, {"{"}tahun{"}"}
                 </p>
               </div>
             </div>

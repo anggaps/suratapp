@@ -19,8 +19,8 @@ export default async function SettingsPage() {
     defaultPassword: "password123",
     itemsPerPage: 10,
     logo: null,
-    incomingLetterFormat: "{sequence}/{classificationCode}/{statusCode}/{year}",
-    outgoingLetterFormat: "{sequence}/{classificationCode}/{statusCode}/{year}",
+    incomingLetterFormat: "{nomorUrut}/{kodeKlasifikasi}/{kodeStatus}/{tahun}",
+    outgoingLetterFormat: "{nomorUrut}/{kodeKlasifikasi}/{kodeStatus}/{tahun}",
     whatsappTemplate: "Assalamu'alaikum Wr. Wb.\n\nYth. {namaPenerima},\nKami informasikan mengenai surat dengan nomor {nomorSurat} perihal \"{perihal}\".\n\nTanggal Surat: {tanggal}\nPengirim: {pengirim}\nPenerima: {penerima}\n\nTerima kasih.\nWassalamu'alaikum Wr. Wb.",
   };
 
