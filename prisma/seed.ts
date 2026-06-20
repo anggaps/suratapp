@@ -95,7 +95,7 @@ async function main() {
       itemsPerPage: 10,
       incomingLetterFormat: "{sequence}/{classificationCode}/{statusCode}/{year}",
       outgoingLetterFormat: "{sequence}/{classificationCode}/{statusCode}/{year}",
-      whatsappTemplate: "Assalamu'alaikum Wr. Wb.\n\nYth. {recipientName},\nKami informasikan mengenai surat dengan nomor {letterNumber} perihal \"{subject}\".\n\nTanggal Surat: {date}\nPengirim: {sender}\nPenerima: {recipient}\n\nTerima kasih.\nWassalamu'alaikum Wr. Wb.",
+      whatsappTemplate: "Assalamu'alaikum Wr. Wb.\n\nYth. {namaPenerima},\nKami informasikan mengenai surat dengan nomor {nomorSurat} perihal \"{perihal}\".\n\nTanggal Surat: {tanggal}\nPengirim: {pengirim}\nPenerima: {penerima}\n\nTerima kasih.\nWassalamu'alaikum Wr. Wb.",
     },
   });
 

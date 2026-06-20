@@ -259,9 +259,9 @@ export default function SettingsForm({ settings }: SettingsFormProps) {
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Token: {"{"}letterNumber{"}"}, {"{"}agendaNumber{"}"}, {"{"}subject{"}"}, {"{"}date{"}"},
-                {"{"}sender{"}"}, {"{"}recipient{"}"}, {"{"}recipientName{"}"}, {"{"}classification{"}"},
-                {"{"}status{"}"}, {"{"}institutionName{"}"}
+                Token: {"{"}nomorSurat{"}"}, {"{"}nomorAgenda{"}"}, {"{"}perihal{"}"}, {"{"}tanggal{"}"},
+                {"{"}pengirim{"}"}, {"{"}penerima{"}"}, {"{"}namaPenerima{"}"}, {"{"}klasifikasi{"}"},
+                {"{"}status{"}"}, {"{"}namaInstitusi{"}"}
               </p>
             </div>
           </CardContent>

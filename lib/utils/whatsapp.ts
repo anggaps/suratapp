@@ -15,7 +15,7 @@ export interface WhatsAppTemplateData {
 }
 
 export function getDefaultWhatsAppTemplate(): string {
-  return "Assalamu'alaikum Wr. Wb.\n\nYth. {recipientName},\nKami informasikan mengenai surat dengan nomor {letterNumber} perihal \"{subject}\".\n\nTanggal Surat: {date}\nPengirim: {sender}\nPenerima: {recipient}\n\nTerima kasih.\nWassalamu'alaikum Wr. Wb.";
+  return "Assalamu'alaikum Wr. Wb.\n\nYth. {namaPenerima},\nKami informasikan mengenai surat dengan nomor {nomorSurat} perihal \"{perihal}\".\n\nTanggal Surat: {tanggal}\nPengirim: {pengirim}\nPenerima: {penerima}\n\nTerima kasih.\nWassalamu'alaikum Wr. Wb.";
 }
 
 export function cleanPhoneNumber(phone: string): string {
@@ -52,18 +52,32 @@ export function formatWhatsAppTemplate(
   data: WhatsAppTemplateData
 ): string {
   const dateStr = formatDate(data.date);
+  const replacements: Array<[RegExp, string]> = [
+    [/\{nomorSurat\}/g, data.letterNumber],
+    [/\{letterNumber\}/g, data.letterNumber],
+    [/\{nomorAgenda\}/g, data.agendaNumber],
+    [/\{agendaNumber\}/g, data.agendaNumber],
+    [/\{perihal\}/g, data.subject],
+    [/\{subject\}/g, data.subject],
+    [/\{tanggal\}/g, dateStr],
+    [/\{date\}/g, dateStr],
+    [/\{pengirim\}/g, data.sender],
+    [/\{sender\}/g, data.sender],
+    [/\{penerima\}/g, data.recipient],
+    [/\{recipient\}/g, data.recipient],
+    [/\{namaPenerima\}/g, data.recipientName ?? data.recipient],
+    [/\{recipientName\}/g, data.recipientName ?? data.recipient],
+    [/\{klasifikasi\}/g, data.classification ?? "-"],
+    [/\{classification\}/g, data.classification ?? "-"],
+    [/\{status\}/g, data.status ?? "-"],
+    [/\{namaInstitusi\}/g, data.institutionName ?? "Institusi"],
+    [/\{institutionName\}/g, data.institutionName ?? "Institusi"],
+  ];
 
-  return template
-    .replace(/\{letterNumber\}/g, data.letterNumber)
-    .replace(/\{agendaNumber\}/g, data.agendaNumber)
-    .replace(/\{subject\}/g, data.subject)
-    .replace(/\{date\}/g, dateStr)
-    .replace(/\{sender\}/g, data.sender)
-    .replace(/\{recipient\}/g, data.recipient)
-    .replace(/\{recipientName\}/g, data.recipientName ?? data.recipient)
-    .replace(/\{classification\}/g, data.classification ?? "-")
-    .replace(/\{status\}/g, data.status ?? "-")
-    .replace(/\{institutionName\}/g, data.institutionName ?? "Institusi");
+  return replacements.reduce(
+    (acc, [pattern, value]) => acc.replace(pattern, value),
+    template
+  );
 }
 
 export function buildWhatsAppLink(phone: string, message: string): string {

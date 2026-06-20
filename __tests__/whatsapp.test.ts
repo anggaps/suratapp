@@ -46,7 +46,24 @@ describe("formatWhatsAppTemplate", () => {
     institutionName: "Pemda Kota",
   };
 
-  it("mengganti semua placeholder dengan nilai data", () => {
+  it("mengganti semua placeholder bahasa Indonesia dengan nilai data", () => {
+    const result = formatWhatsAppTemplate(
+      "{nomorSurat} | {nomorAgenda} | {perihal} | {tanggal} | {pengirim} | {penerima} | {namaPenerima} | {klasifikasi} | {status} | {namaInstitusi}",
+      data
+    );
+    expect(result).toContain("001/A/D/2026");
+    expect(result).toContain("AG-001");
+    expect(result).toContain("Undangan Rapat");
+    expect(result).toContain("20 Juni 2026");
+    expect(result).toContain("Sekretariat");
+    expect(result).toContain("Kepala Dinas");
+    expect(result).toContain("Budi");
+    expect(result).toContain("Rahasia");
+    expect(result).toContain("Diproses");
+    expect(result).toContain("Pemda Kota");
+  });
+
+  it("mendukung token lama (bahasa Inggris) untuk backward compatibility", () => {
     const result = formatWhatsAppTemplate(
       "{letterNumber} | {agendaNumber} | {subject} | {date} | {sender} | {recipient} | {recipientName} | {classification} | {status} | {institutionName}",
       data
@@ -63,16 +80,24 @@ describe("formatWhatsAppTemplate", () => {
     expect(result).toContain("Pemda Kota");
   });
 
-  it("menggunakan recipient sebagai recipientName jika tidak disediakan", () => {
+  it("mendukung campuran token lama dan baru", () => {
+    const result = formatWhatsAppTemplate(
+      "{nomorSurat} - {subject} - {namaPenerima}",
+      data
+    );
+    expect(result).toBe("001/A/D/2026 - Undangan Rapat - Budi");
+  });
+
+  it("menggunakan recipient sebagai namaPenerima jika tidak disediakan", () => {
     const { recipientName, ...dataWithoutName } = data;
     void recipientName;
-    const result = formatWhatsAppTemplate("Yth. {recipientName}", dataWithoutName);
+    const result = formatWhatsAppTemplate("Yth. {namaPenerima}", dataWithoutName);
     expect(result).toBe("Yth. Kepala Dinas");
   });
 
   it("menggunakan nilai default untuk field opsional yang kosong", () => {
     const result = formatWhatsAppTemplate(
-      "{classification} | {status} | {institutionName}",
+      "{klasifikasi} | {status} | {namaInstitusi}",
       { ...data, classification: undefined, status: undefined, institutionName: undefined }
     );
     expect(result).toBe("- | - | Institusi");
@@ -87,10 +112,10 @@ describe("buildWhatsAppLink", () => {
 });
 
 describe("getDefaultWhatsAppTemplate", () => {
-  it("mengembalikan template default yang berisi placeholder", () => {
+  it("mengembalikan template default yang berisi placeholder bahasa Indonesia", () => {
     const template = getDefaultWhatsAppTemplate();
-    expect(template).toContain("{letterNumber}");
-    expect(template).toContain("{subject}");
-    expect(template).toContain("{recipientName}");
+    expect(template).toContain("{nomorSurat}");
+    expect(template).toContain("{perihal}");
+    expect(template).toContain("{namaPenerima}");
   });
 });
