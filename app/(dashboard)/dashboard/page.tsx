@@ -16,6 +16,10 @@ async function getDashboardData() {
   const yesterdayEnd = endOfDay(subDays(new Date(), 1));
   const last7DaysStart = startOfDay(subDays(new Date(), 6));
 
+  // Audit log is admin-only, so only fetch the recent-activity feed for admins.
+  const session = await auth();
+  const isAdmin = session?.user?.role === "ADMIN";
+
   const [
     incomingToday,
     incomingYesterday,
@@ -63,7 +67,7 @@ async function getDashboardData() {
       orderBy: { createdAt: "desc" },
       include: { incomingLetter: true, creator: true },
     }),
-    getRecentAuditLogs(10),
+    isAdmin ? getRecentAuditLogs(10) : Promise.resolve([]),
   ]);
 
   const transactionToday = incomingToday + outgoingToday;
@@ -109,6 +113,7 @@ export default async function DashboardPage() {
   const data = await getDashboardData();
 
   const isPimpinan = session?.user?.role === "PIMPINAN";
+  const isAdmin = session?.user?.role === "ADMIN";
 
   type Stat = {
     title: string;
@@ -268,6 +273,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
+        {isAdmin && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -297,6 +303,7 @@ export default async function DashboardPage() {
             ))}
           </CardContent>
         </Card>
+        )}
       </div>
     </div>
   );

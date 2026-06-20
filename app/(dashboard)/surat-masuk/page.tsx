@@ -32,6 +32,7 @@ interface PageProps {
 export default async function IncomingLettersPage({ searchParams }: PageProps) {
   const session = await auth();
   const isPimpinan = session?.user?.role === "PIMPINAN";
+  const isAdmin = session?.user?.role === "ADMIN";
   const { q, page, classificationId, statusId, from, to } = await searchParams;
   const currentPage = Number(page) || 1;
   const settings = await prisma.setting.findFirst();
@@ -179,7 +180,7 @@ export default async function IncomingLettersPage({ searchParams }: PageProps) {
                             <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
-                        {!isPimpinan && <DeleteIncomingButton id={letter.id} />}
+                        {isAdmin && <DeleteIncomingButton id={letter.id} />}
                       </div>
                     </TableCell>
                   </TableRow>

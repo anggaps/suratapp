@@ -44,7 +44,7 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
   const session = await auth();
   const role = session?.user?.role;
   const isPimpinan = role === "PIMPINAN";
-  const isStaff = role === "STAFF";
+  const isAdmin = role === "ADMIN";
   const { q, page, classificationId, statusId, approval, from, to } = await searchParams;
   const currentPage = Number(page) || 1;
   const settings = await prisma.setting.findFirst();
@@ -180,7 +180,6 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
                 )}
                 {letters.map((letter) => {
                   const approval = getApprovalStatus(letter);
-                  const canEditDelete = !isPimpinan && !(isStaff && letter.approvedById);
                   return (
                     <TableRow key={letter.id}>
                       <TableCell data-label="No. Agenda">{letter.agendaNumber}</TableCell>
@@ -201,7 +200,7 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
-                          {canEditDelete && <DeleteOutgoingButton id={letter.id} />}
+                          {isAdmin && <DeleteOutgoingButton id={letter.id} />}
                         </div>
                       </TableCell>
                     </TableRow>

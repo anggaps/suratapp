@@ -196,6 +196,7 @@ export function DispositionList({ dispositions, letterId, canAdd = true }: Dispo
               )}
               <p className="text-xs text-muted-foreground">Oleh {d.creator.name}</p>
             </div>
+            {canAdd && (
             <Button
               variant="ghost"
               size="icon"
@@ -209,6 +210,7 @@ export function DispositionList({ dispositions, letterId, canAdd = true }: Dispo
                 <Trash2 className="h-4 w-4" />
               )}
             </Button>
+            )}
           </div>
         ))}
       </CardContent>

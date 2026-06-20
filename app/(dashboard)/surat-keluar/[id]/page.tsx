@@ -58,7 +58,8 @@ export default async function OutgoingLetterDetailPage({ params }: PageProps) {
   if (!letter) notFound();
 
   const approvalStatus = getApprovalStatus(letter);
-  const canEditDelete = !isPimpinan && !(isStaff && letter.approvedById);
+  const canEdit = !isPimpinan && !(isStaff && letter.approvedById);
+  const canDelete = isAdmin;
   const canApproveReject = isAdmin || isPimpinan;
 
   const [recipients, notificationData, auditLogs, whatsappLogs] = await Promise.all([
@@ -100,7 +101,7 @@ export default async function OutgoingLetterDetailPage({ params }: PageProps) {
               institutionName: notificationData.settings.institutionName,
             }}
           />
-          {canEditDelete && (
+          {canEdit && (
             <Button variant="outline" asChild>
               <Link href={`/surat-keluar/${letter.id}/edit`}>
                 <Edit className="mr-2 h-4 w-4" />
@@ -108,7 +109,7 @@ export default async function OutgoingLetterDetailPage({ params }: PageProps) {
               </Link>
             </Button>
           )}
-          {canEditDelete && <DeleteOutgoingButton id={letter.id} />}
+          {canDelete && <DeleteOutgoingButton id={letter.id} />}
         </div>
       </div>
 

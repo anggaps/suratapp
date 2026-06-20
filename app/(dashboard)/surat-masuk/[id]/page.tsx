@@ -28,6 +28,7 @@ interface PageProps {
 export default async function IncomingLetterDetailPage({ params }: PageProps) {
   const session = await auth();
   const isPimpinan = session?.user?.role === "PIMPINAN";
+  const isAdmin = session?.user?.role === "ADMIN";
   const canManageDisposisi = session?.user?.role === "ADMIN" || session?.user?.role === "PIMPINAN";
 
   const { id: letterId } = await params;
@@ -94,7 +95,7 @@ export default async function IncomingLetterDetailPage({ params }: PageProps) {
               </Link>
             </Button>
           )}
-          {!isPimpinan && <DeleteIncomingButton id={letter.id} />}
+          {isAdmin && <DeleteIncomingButton id={letter.id} />}
         </div>
       </div>
 

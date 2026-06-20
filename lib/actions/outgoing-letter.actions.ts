@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdminOrStaff, requireAdminOrPimpinan } from "@/lib/auth-utils";
+import { requireAdminOrStaff, requireAdminOrPimpinan, requireRole } from "@/lib/auth-utils";
 import { UserRole } from "@prisma/client";
 import { uploadFile, deleteFile } from "@/lib/storage";
 import { createAuditLog } from "@/lib/actions/audit.actions";
@@ -200,7 +200,7 @@ export async function updateOutgoingLetter(id: string, formData: FormData) {
 }
 
 export async function deleteOutgoingLetter(id: string) {
-  const user = await requireAdminOrStaff();
+  const user = await requireRole(UserRole.ADMIN);
 
   const letter = await prisma.outgoingLetter.findUnique({
     where: { id },

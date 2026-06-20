@@ -107,7 +107,7 @@ export function Sidebar({
           );
         })}
 
-        {(isAdmin || isStaff) && (
+        {isAdmin && (
         <Collapsible defaultOpen={pathname.startsWith("/referensi")}>
           <CollapsibleTrigger asChild>
             <Button

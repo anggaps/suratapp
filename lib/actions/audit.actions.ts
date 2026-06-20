@@ -1,7 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireAdminOrPimpinan } from "@/lib/auth-utils";
+import { requireAuth, requireAdminOrPimpinan, requireRole } from "@/lib/auth-utils";
+import { UserRole } from "@prisma/client";
 import { serializePayload } from "@/lib/utils/audit";
 
 export type AuditAction = "CREATE" | "UPDATE" | "DELETE" | "APPROVE" | "REJECT";
@@ -48,7 +49,7 @@ export async function getAuditLogsForEntity(
 }
 
 export async function getRecentAuditLogs(limit = 20) {
-  await requireAuth();
+  await requireRole(UserRole.ADMIN);
 
   return prisma.auditLog.findMany({
     orderBy: { createdAt: "desc" },

@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { requireRole } from "@/lib/auth-utils";
+import { UserRole } from "@prisma/client";
 
 const classificationSchema = z.object({
   code: z.string().min(1, "Kode wajib diisi").regex(/^[A-Za-z0-9./\-]+$/, "Kode hanya boleh huruf, angka, titik, slash, dan strip"),
@@ -17,8 +18,7 @@ const statusSchema = z.object({
 });
 
 export async function createClassification(formData: FormData) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  const session = await requireRole(UserRole.ADMIN);
 
   const raw = Object.fromEntries(formData.entries());
   const parsed = classificationSchema.safeParse(raw);
@@ -28,7 +28,7 @@ export async function createClassification(formData: FormData) {
 
   try {
     await prisma.classification.create({
-      data: { ...parsed.data, createdBy: session.user.id },
+      data: { ...parsed.data, createdBy: session.id },
     });
     revalidatePath("/referensi/klasifikasi");
     return { success: true };
@@ -42,8 +42,7 @@ export async function createClassification(formData: FormData) {
 }
 
 export async function updateClassification(id: string, formData: FormData) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  await requireRole(UserRole.ADMIN);
 
   const raw = Object.fromEntries(formData.entries());
   const parsed = classificationSchema.safeParse(raw);
@@ -68,8 +67,7 @@ export async function updateClassification(id: string, formData: FormData) {
 }
 
 export async function deleteClassification(id: string) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  await requireRole(UserRole.ADMIN);
 
   await prisma.classification.delete({ where: { id } });
   revalidatePath("/referensi/klasifikasi");
@@ -77,8 +75,7 @@ export async function deleteClassification(id: string) {
 }
 
 export async function createStatus(formData: FormData) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  const session = await requireRole(UserRole.ADMIN);
 
   const raw = Object.fromEntries(formData.entries());
   const parsed = statusSchema.safeParse(raw);
@@ -88,7 +85,7 @@ export async function createStatus(formData: FormData) {
 
   try {
     await prisma.letterStatus.create({
-      data: { ...parsed.data, createdBy: session.user.id },
+      data: { ...parsed.data, createdBy: session.id },
     });
     revalidatePath("/referensi/status-surat");
     return { success: true };
@@ -102,8 +99,7 @@ export async function createStatus(formData: FormData) {
 }
 
 export async function updateStatus(id: string, formData: FormData) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  await requireRole(UserRole.ADMIN);
 
   const raw = Object.fromEntries(formData.entries());
   const parsed = statusSchema.safeParse(raw);
@@ -128,8 +124,7 @@ export async function updateStatus(id: string, formData: FormData) {
 }
 
 export async function deleteStatus(id: string) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  await requireRole(UserRole.ADMIN);
 
   await prisma.letterStatus.delete({ where: { id } });
   revalidatePath("/referensi/status-surat");
