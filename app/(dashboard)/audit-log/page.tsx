@@ -69,7 +69,7 @@ function formatPayload(payload: string | null): string {
 
 export default async function AuditLogPage({ searchParams }: PageProps) {
   const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "PIMPINAN")) {
+  if (!session?.user || session.user.role !== "ADMIN") {
     redirect("/dashboard");
   }
 

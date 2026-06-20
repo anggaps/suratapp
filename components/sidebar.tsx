@@ -51,7 +51,6 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const isAdmin = role === "ADMIN";
-  const isPimpinan = role === "PIMPINAN";
   const isStaff = role === "STAFF";
 
   const isDrawer = variant === "drawer";
@@ -179,7 +178,7 @@ export function Sidebar({
           </>
         )}
 
-        {(isAdmin || isPimpinan) && (
+        {isAdmin && (
           <Link
             href="/audit-log"
             className={cn(
