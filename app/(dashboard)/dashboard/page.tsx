@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { startOfDay, endOfDay, subDays, format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -109,12 +110,21 @@ export default async function DashboardPage() {
 
   const isPimpinan = session?.user?.role === "PIMPINAN";
 
-  const stats = isPimpinan
+  type Stat = {
+    title: string;
+    value: number;
+    icon: typeof MailOpen;
+    percent?: number;
+    href?: string;
+  };
+
+  const stats: Stat[] = isPimpinan
     ? [
         {
           title: "Menunggu Persetujuan",
           value: data.outgoingPending,
           icon: Send,
+          href: "/surat-keluar?approval=menunggu",
         },
         {
           title: "Disetujui Hari Ini",
@@ -176,8 +186,8 @@ export default async function DashboardPage() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           const isPositive = stat.percent && stat.percent >= 0;
-          return (
-            <Card key={stat.title}>
+          const card = (
+            <Card key={stat.title} className={stat.href ? "transition-shadow hover:shadow-md" : undefined}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
                 <Icon className="h-4 w-4 text-muted-foreground" />
@@ -197,6 +207,14 @@ export default async function DashboardPage() {
               </CardContent>
             </Card>
           );
+          if (stat.href) {
+            return (
+              <Link key={stat.title} href={stat.href} className="block">
+                {card}
+              </Link>
+            );
+          }
+          return card;
         })}
       </div>
 

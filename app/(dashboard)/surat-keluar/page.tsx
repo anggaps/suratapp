@@ -24,6 +24,7 @@ interface PageProps {
     page?: string;
     classificationId?: string;
     statusId?: string;
+    approval?: "menunggu" | "disetujui" | "ditolak";
     from?: string;
     to?: string;
   }>;
@@ -44,7 +45,7 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
   const role = session?.user?.role;
   const isPimpinan = role === "PIMPINAN";
   const isStaff = role === "STAFF";
-  const { q, page, classificationId, statusId, from, to } = await searchParams;
+  const { q, page, classificationId, statusId, approval, from, to } = await searchParams;
   const currentPage = Number(page) || 1;
   const settings = await prisma.setting.findFirst();
   const pageSize = settings?.itemsPerPage ?? 10;
@@ -69,6 +70,14 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
 
   if (statusId) {
     conditions.push({ statusId });
+  }
+
+  if (approval === "menunggu") {
+    conditions.push({ approvedById: null, rejectionReason: null });
+  } else if (approval === "disetujui") {
+    conditions.push({ approvedById: { not: null } });
+  } else if (approval === "ditolak") {
+    conditions.push({ rejectionReason: { not: null }, approvedById: null });
   }
 
   if (from && isValid(parseISO(from))) {
@@ -111,6 +120,7 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
     if (q) params.set("q", q);
     if (classificationId) params.set("classificationId", classificationId);
     if (statusId) params.set("statusId", statusId);
+    if (approval) params.set("approval", approval);
     if (from) params.set("from", from);
     if (to) params.set("to", to);
     params.set("page", String(targetPage));
@@ -143,6 +153,7 @@ export default async function OutgoingLettersPage({ searchParams }: PageProps) {
             classifications={classificationOptions}
             statuses={statusOptions}
             showDateRange={true}
+            showApprovalFilter={true}
           />
 
           <div className="overflow-x-auto rounded-md border">

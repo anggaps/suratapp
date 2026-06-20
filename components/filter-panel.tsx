@@ -23,12 +23,14 @@ interface FilterPanelProps {
   classifications: FilterOption[];
   statuses: FilterOption[];
   showDateRange?: boolean;
+  showApprovalFilter?: boolean;
 }
 
 export function FilterPanel({
   classifications,
   statuses,
   showDateRange = true,
+  showApprovalFilter = false,
 }: FilterPanelProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -37,6 +39,7 @@ export function FilterPanel({
   const q = searchParams.get("q") ?? "";
   const classificationId = searchParams.get("classificationId") ?? "";
   const statusId = searchParams.get("statusId") ?? "";
+  const approval = searchParams.get("approval") ?? "";
   const from = searchParams.get("from") ?? "";
   const to = searchParams.get("to") ?? "";
 
@@ -61,7 +64,7 @@ export function FilterPanel({
     router.push(pathname);
   };
 
-  const hasFilter = q || classificationId || statusId || from || to;
+  const hasFilter = q || classificationId || statusId || approval || from || to;
 
   return (
     <div className="flex flex-wrap items-end gap-3">
@@ -124,6 +127,28 @@ export function FilterPanel({
           </SelectContent>
         </Select>
       </div>
+
+      {showApprovalFilter && (
+        <div className="w-[180px] space-y-1">
+          <Label className="text-xs">Status Persetujuan</Label>
+          <Select
+            value={approval || "__all__"}
+            onValueChange={(value) =>
+              handleChange("approval", value === "__all__" ? "" : value)
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Semua persetujuan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Semua persetujuan</SelectItem>
+              <SelectItem value="menunggu">Menunggu</SelectItem>
+              <SelectItem value="disetujui">Disetujui</SelectItem>
+              <SelectItem value="ditolak">Ditolak</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {showDateRange && (
         <>
